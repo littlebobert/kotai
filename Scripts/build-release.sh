@@ -85,7 +85,20 @@ if grep -Fq "get-task-allow" <<<"$ENTITLEMENTS"; then
   exit 1
 fi
 SIGNATURE_DETAILS="$(codesign -dv --verbose=4 "$APP" 2>&1)"
+grep -Fq "Identifier=com.justin.Kotai" <<<"$SIGNATURE_DETAILS" || { echo "error: release signature has unexpected identifier" >&2; exit 1; }
 grep -Fq "TeamIdentifier=$TEAM_ID" <<<"$SIGNATURE_DETAILS" || { echo "error: release app was not signed by team $TEAM_ID" >&2; exit 1; }
+DESIGNATED_REQUIREMENT="$(codesign -d -r- "$APP" 2>&1)"
+for expected_requirement_field in \
+  'identifier "com.justin.Kotai"' \
+  'anchor apple generic' \
+  'certificate 1[field.1.2.840.113635.100.6.2.6]' \
+  'certificate leaf[field.1.2.840.113635.100.6.1.13]' \
+  "certificate leaf[subject.OU] = $TEAM_ID"; do
+  grep -Fq "$expected_requirement_field" <<<"$DESIGNATED_REQUIREMENT" || {
+    echo "error: release app designated requirement is missing: $expected_requirement_field" >&2
+    exit 1
+  }
+done
 grep -Fq "Runtime Version" <<<"$SIGNATURE_DETAILS" || { echo "error: hardened runtime is not enabled" >&2; exit 1; }
 FRAMEWORK_SIGNATURE="$(codesign -dv --verbose=4 "$SPARKLE_FRAMEWORK" 2>&1)"
 grep -Fq "TeamIdentifier=$TEAM_ID" <<<"$FRAMEWORK_SIGNATURE" || { echo "error: Sparkle.framework was not signed by team $TEAM_ID" >&2; exit 1; }

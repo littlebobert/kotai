@@ -6,6 +6,7 @@ struct CopyButton: View {
     let label: LocalizedStringKey
     var compact = false
     var reservedWidth: CGFloat? = nil
+    var reservedAlignment: Alignment = .center
 
     @State private var isShowingConfirmation = false
     @State private var resetTask: Task<Void, Never>?
@@ -19,7 +20,7 @@ struct CopyButton: View {
                 .animation(.easeInOut(duration: 0.15), value: isShowingConfirmation)
         }
         .buttonStyle(.borderless)
-        .frame(width: reservedWidth)
+        .frame(width: reservedWidth, alignment: reservedAlignment)
         .help(isShowingConfirmation ? "Copied" : label)
         .accessibilityLabel(isShowingConfirmation ? "Copied" : label)
         .disabled(value.isEmpty)
@@ -43,7 +44,7 @@ struct CopyButton: View {
                     .opacity(isShowingConfirmation ? 1 : 0)
             }
         } else {
-            ZStack {
+            ZStack(alignment: reservedAlignment) {
                 Label(label, systemImage: "doc.on.doc")
                     .labelStyle(.titleAndIcon)
                     .hidden()

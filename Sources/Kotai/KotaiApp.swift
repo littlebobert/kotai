@@ -75,6 +75,12 @@ private struct MenuBarContent: View {
     }
 }
 
+enum ApplicationLaunchEnvironment {
+    static func shouldStartRuntime(environment: [String: String]) -> Bool {
+        environment["KOTAI_RUNNING_TESTS"] != "1"
+    }
+}
+
 private struct MenuBarLabel: View {
     let controller: AppController
 
@@ -88,7 +94,11 @@ private struct MenuBarLabel: View {
             systemImage: "signpost.right.and.left"
         )
         .task {
-            guard !hasStarted else {
+            guard !hasStarted,
+                  ApplicationLaunchEnvironment.shouldStartRuntime(
+                    environment: ProcessInfo.processInfo.environment
+                  )
+            else {
                 return
             }
             hasStarted = true

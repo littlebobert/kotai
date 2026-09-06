@@ -41,6 +41,16 @@ final class AppController {
         }
     }
 
+    enum CredentialAvailability: Equatable {
+        case complete
+        case missing
+        case inaccessible(String)
+
+        var requiresSetup: Bool {
+            self == .missing
+        }
+    }
+
     private static let proxyPort = 18_742
 
     let autoUpdates = AutoUpdateService()
@@ -105,12 +115,14 @@ final class AppController {
         try await configuration.credential(credential) ?? ""
     }
 
-    func saveCredentials(
+    func saveSetupCredentials(
         personalOpenRouterKey: String,
         workOpenRouterKey: String,
-        proxyToken: String
+        proxyToken: String,
+        ngrokAuthtoken: String,
+        ngrokStaticURL: String
     ) async throws {
-        KotaiLogger.shared.info("Saving setup credentials")
+        KotaiLogger.shared.info("Saving verified setup credentials")
         try await configuration.setCredentials([
             .personalOpenRouterKey: personalOpenRouterKey.trimmingCharacters(
                 in: .whitespacesAndNewlines
@@ -121,7 +133,23 @@ final class AppController {
             .proxyToken: proxyToken.trimmingCharacters(
                 in: .whitespacesAndNewlines
             ),
+            .ngrokAuthtoken: ngrokAuthtoken.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            .ngrokStaticURL: ngrokStaticURL.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
         ])
+    }
+
+    static func credentialAvailability(
+        values: [String?],
+        error: Error? = nil
+    ) -> CredentialAvailability {
+        if let error {
+            return .inaccessible(error.localizedDescription)
+        }
+        return values.allSatisfy { !($0 ?? "").isEmpty } ? .complete : .missing
     }
 
     func updateCredential(
@@ -192,22 +220,14 @@ final class AppController {
         let normalizedAuthtoken = authtoken.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
-        let proxyToken = try await ensureProxyToken()
+        let proxyToken = try await setupProxyToken()
         let publicURL = try await restartNgrok(
             authtoken: normalizedAuthtoken,
             staticURL: normalizedStaticURL.absoluteString,
             progress: progress
         )
-        try await configuration.setCredentials([
-            .ngrokAuthtoken: normalizedAuthtoken,
-            .ngrokStaticURL: normalizedStaticURL.absoluteString,
-        ])
-        UserDefaults.standard.set(
-            normalizedStaticURL.absoluteString,
-            forKey: "ngrok-public-url"
-        )
         KotaiLogger.shared.info(
-            "ngrok setup completed; host=\(normalizedStaticURL.host)"
+            "ngrok endpoint verified; host=\(normalizedStaticURL.host)"
         )
         return (publicURL, proxyToken)
     }
@@ -258,19 +278,14 @@ final class AppController {
         return randomBytes.map { String(format: "%02x", $0) }.joined()
     }
 
-    private func ensureProxyToken() async throws -> String {
+    private func setupProxyToken() async throws -> String {
         if let existingToken = try await configuration.credential(.proxyToken),
            !existingToken.isEmpty
         {
             return existingToken
         }
 
-        let proxyToken = generateProxyToken()
-        try await configuration.setCredential(
-            proxyToken,
-            for: .proxyToken
-        )
-        return proxyToken
+        return generateProxyToken()
     }
 
     func quit() {
@@ -334,7 +349,7 @@ final class AppController {
                 configuration.credential(.workOpenRouterKey),
                 configuration.credential(.proxyToken),
             ]
-            guard requiredCredentials.allSatisfy({ !($0 ?? "").isEmpty }) else {
+            guard Self.credentialAvailability(values: requiredCredentials) == .complete else {
                 KotaiLogger.shared.warning(
                     "Runtime needs configuration; one or more credentials are missing"
                 )
@@ -363,10 +378,17 @@ final class AppController {
             runtimeStatus = .running
             KotaiLogger.shared.info("Runtime connected")
         } catch {
+            let availability = Self.credentialAvailability(values: [], error: error)
             KotaiLogger.shared.error(
                 "Runtime refresh failed: \(error.localizedDescription)"
             )
-            runtimeStatus = .failed(error.localizedDescription)
+            isSetupRequired = availability.requiresSetup
+            shouldShowSetupWizard = false
+            if case .inaccessible(let message) = availability {
+                runtimeStatus = .failed(message)
+            } else {
+                runtimeStatus = .failed(error.localizedDescription)
+            }
         }
     }
 

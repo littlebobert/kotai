@@ -201,13 +201,15 @@ struct SettingsView: View {
                     CopyButton(
                         value: baseURL(appendingPath: "cursor/v1"),
                         label: "Copy Cursor URL",
-                        reservedWidth: 170
+                        reservedWidth: 170,
+                        reservedAlignment: .leading
                     )
                     .frame(maxWidth: .infinity, alignment: .leading)
                     CopyButton(
                         value: baseURL(appendingPath: "v1"),
                         label: "Copy generic URL",
-                        reservedWidth: 170
+                        reservedWidth: 170,
+                        reservedAlignment: .leading
                     )
                     .frame(maxWidth: .infinity, alignment: .leading)
 

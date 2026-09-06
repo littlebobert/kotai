@@ -45,6 +45,7 @@ struct RevealableSecureField: View {
                     .frame(width: 16)
             }
             .buttonStyle(.borderless)
+            .frame(width: 24, height: 22)
             .help(Text(visibilityLabel))
             .accessibilityLabel(Text(visibilityLabel))
         }

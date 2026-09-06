@@ -1,17 +1,46 @@
 import Foundation
 import Security
 
-enum SecureStoreError: LocalizedError {
+enum SecureStoreError: LocalizedError, Equatable {
+    enum StatusClassification: Equatable {
+        case itemNotFound
+        case accessDenied
+        case otherFailure
+    }
+
     case invalidStoredValue
+    case accessDenied(OSStatus)
     case unexpectedStatus(OSStatus)
+
+    static func classify(_ status: OSStatus) -> StatusClassification {
+        switch status {
+        case errSecItemNotFound:
+            .itemNotFound
+        case errSecAuthFailed, errSecUserCanceled, errSecInteractionNotAllowed:
+            .accessDenied
+        default:
+            .otherFailure
+        }
+    }
+
+    static func statusError(_ status: OSStatus) -> SecureStoreError {
+        switch classify(status) {
+        case .accessDenied:
+            .accessDenied(status)
+        case .itemNotFound, .otherFailure:
+            .unexpectedStatus(status)
+        }
+    }
 
     var errorDescription: String? {
         switch self {
         case .invalidStoredValue:
-            "The stored Keychain value is not valid UTF-8."
+            String(localized: "The stored Keychain value is not valid UTF-8.")
+        case .accessDenied:
+            String(localized: "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai.")
         case .unexpectedStatus(let status):
             SecCopyErrorMessageString(status, nil) as String?
-                ?? "Keychain returned status \(status)."
+                ?? String(localized: "Keychain returned status \(status).")
         }
     }
 }
@@ -33,11 +62,13 @@ struct SecureStore: Sendable {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
 
-        if status == errSecItemNotFound {
+        switch SecureStoreError.classify(status) {
+        case .itemNotFound:
             return nil
-        }
-        guard status == errSecSuccess else {
-            throw SecureStoreError.unexpectedStatus(status)
+        case .accessDenied, .otherFailure:
+            guard status == errSecSuccess else {
+                throw SecureStoreError.statusError(status)
+            }
         }
         guard
             let data = result as? Data,
@@ -69,13 +100,13 @@ struct SecureStore: Sendable {
             }
             let addStatus = SecItemAdd(newItem as CFDictionary, nil)
             guard addStatus == errSecSuccess else {
-                throw SecureStoreError.unexpectedStatus(addStatus)
+                throw SecureStoreError.statusError(addStatus)
             }
             return
         }
 
         guard updateStatus == errSecSuccess else {
-            throw SecureStoreError.unexpectedStatus(updateStatus)
+            throw SecureStoreError.statusError(updateStatus)
         }
     }
 
@@ -84,7 +115,7 @@ struct SecureStore: Sendable {
         let status = SecItemDelete(query as CFDictionary)
 
         guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw SecureStoreError.unexpectedStatus(status)
+            throw SecureStoreError.statusError(status)
         }
     }
 

@@ -34,4 +34,56 @@ struct SecureStoreTests {
                 == injectedService
         )
     }
+
+    @Test(arguments: [
+        errSecAuthFailed,
+        errSecUserCanceled,
+        errSecInteractionNotAllowed,
+    ])
+    func accessStatusesAreClassifiedWithoutKeychainCalls(status: OSStatus) {
+        #expect(SecureStoreError.classify(status) == .accessDenied)
+        #expect(SecureStoreError.statusError(status) == .accessDenied(status))
+    }
+
+    @Test
+    func itemNotFoundIsDistinctFromAccessFailure() {
+        #expect(SecureStoreError.classify(errSecItemNotFound) == .itemNotFound)
+        #expect(SecureStoreError.classify(errSecParam) == .otherFailure)
+    }
+
+    @Test @MainActor
+    func missingCredentialsRequireSetup() {
+        let availability = AppController.credentialAvailability(
+            values: ["token", nil, "key"]
+        )
+
+        #expect(availability == .missing)
+        #expect(availability.requiresSetup)
+    }
+
+    @Test @MainActor
+    func deniedCredentialAccessDoesNotRequireSetup() {
+        let error = SecureStoreError.accessDenied(errSecUserCanceled)
+        let availability = AppController.credentialAvailability(
+            values: [],
+            error: error
+        )
+
+        #expect(!availability.requiresSetup)
+        guard case .inaccessible(let message) = availability else {
+            Issue.record("Expected inaccessible credential state")
+            return
+        }
+        #expect(message.contains("Always Allow"))
+    }
+
+    @Test
+    func testHostDoesNotStartRuntimeServices() {
+        #expect(
+            !ApplicationLaunchEnvironment.shouldStartRuntime(
+                environment: ["KOTAI_RUNNING_TESTS": "1"]
+            )
+        )
+        #expect(ApplicationLaunchEnvironment.shouldStartRuntime(environment: [:]))
+    }
 }

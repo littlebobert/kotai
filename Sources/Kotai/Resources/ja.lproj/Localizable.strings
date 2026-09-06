@@ -116,3 +116,7 @@
 "Enter a valid HTTPS URL without a path, query, or fragment." = "パス、クエリ、フラグメントを含まない有効なHTTPS URLを入力してください。";
 "Restart ngrok" = "ngrokを再起動";
 "Saved" = "保存済み";
+"Connecting…" = "接続中…";
+"Keychain returned status %lld." = "キーチェーンからステータス%lldが返されました。";
+"Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai." = "Kotaiは保存済みの認証情報にアクセスできませんでした。キーチェーンの確認画面で「常に許可」を選び、Kotaiを再起動してください。";
+"The stored Keychain value is not valid UTF-8." = "キーチェーンに保存された値の形式が正しくありません。";

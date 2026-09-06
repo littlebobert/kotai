@@ -34,6 +34,7 @@ struct SetupWizardView: View {
     @State private var errorMessage: String?
     @State private var isLoading = true
     @State private var isSaving = false
+    @State private var credentialLoadFailed = false
 
     private var cursorBaseURL: String {
         baseURL(appendingPath: "cursor/v1")
@@ -47,6 +48,12 @@ struct SetupWizardView: View {
         VStack(spacing: 0) {
             header
             Divider()
+
+            if credentialLoadFailed, let errorMessage {
+                keychainAccessError(errorMessage)
+                    .padding(.horizontal, 28)
+                    .padding(.top, 20)
+            }
 
             if currentStep == .cursor {
                 cursorStep
@@ -149,10 +156,10 @@ struct SetupWizardView: View {
                 Text("ngrok authtoken")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                SecureField(
-                    "ngrok authtoken",
+                RevealableSecureField(
+                    label: "ngrok authtoken",
                     text: $ngrokAuthtoken,
-                    prompt: Text("Paste your ngrok authtoken")
+                    prompt: "Paste your ngrok authtoken"
                 )
                 .textFieldStyle(.roundedBorder)
                 underlinedLink(
@@ -176,32 +183,6 @@ struct SetupWizardView: View {
                     destination: URL(string: "https://dashboard.ngrok.com/domains")!
                 )
             }
-
-            Button {
-                setupNgrok()
-            } label: {
-                HStack {
-                    if isSaving {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
-                    Text(
-                        ngrokPublicURL == nil
-                            ? String(localized: "Connect ngrok")
-                            : String(localized: "Reconnect ngrok")
-                    )
-                }
-            }
-            .buttonStyle(WizardPrimaryButtonStyle())
-            .disabled(
-                isSaving
-                    || ngrokAuthtoken
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
-                        .isEmpty
-                    || ngrokStaticURL
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
-                        .isEmpty
-            )
 
             if let ngrokSetupPhase {
                 Text(ngrokSetupPhase.displayName)
@@ -260,6 +241,7 @@ struct SetupWizardView: View {
                 Button("Back") {
                     moveBackward()
                 }
+                .disabled(isSaving)
             }
 
             Spacer()
@@ -271,12 +253,17 @@ struct SetupWizardView: View {
                     .lineLimit(2)
             }
 
-            Button(
-                currentStep == .modelRouting
-                    ? String(localized: "Finish")
-                    : String(localized: "Continue")
-            ) {
+            Button {
                 advance()
+            } label: {
+                HStack(spacing: 6) {
+                    if currentStep == .ngrok, isSaving {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                    Text(continueButtonTitle)
+                }
+                .frame(minWidth: 72)
             }
             .buttonStyle(WizardPrimaryButtonStyle())
             .disabled(isLoading || isSaving || !canContinue)
@@ -284,17 +271,44 @@ struct SetupWizardView: View {
         .padding(20)
     }
 
+    private var continueButtonTitle: String {
+        if currentStep == .modelRouting {
+            return String(localized: "Finish")
+        }
+        if currentStep == .ngrok, isSaving {
+            return String(localized: "Connecting…")
+        }
+        return String(localized: "Continue")
+    }
+
     private var canContinue: Bool {
+        guard !credentialLoadFailed else {
+            return false
+        }
         switch currentStep {
         case .openRouter:
-            !personalOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return !personalOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 && !workOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .ngrok:
-            !ngrokAuthtoken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                && ngrokPublicURL != nil
+            return !ngrokAuthtoken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !ngrokStaticURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .cursor, .modelRouting:
-            true
+            return true
         }
+    }
+
+    private func keychainAccessError(_ message: String) -> some View {
+        Label {
+            Text(message)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "key.slash.fill")
+        }
+        .font(.callout)
+        .foregroundStyle(.red)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
     }
 
     private func stepTitle(
@@ -381,6 +395,7 @@ struct SetupWizardView: View {
             ngrokStaticURL = (confirmedURL ?? suggestionURL)?.absoluteString ?? ""
             ngrokPublicURL = confirmedURL
         } catch {
+            credentialLoadFailed = true
             errorMessage = error.localizedDescription
         }
     }
@@ -392,7 +407,7 @@ struct SetupWizardView: View {
         case .openRouter:
             currentStep = .ngrok
         case .ngrok:
-            saveCredentials()
+            setupNgrok()
         case .cursor:
             currentStep = .modelRouting
         case .modelRouting:
@@ -405,25 +420,6 @@ struct SetupWizardView: View {
             return
         }
         currentStep = previousStep
-    }
-
-    private func saveCredentials() {
-        isSaving = true
-
-        Task {
-            defer { isSaving = false }
-
-            do {
-                try await controller.saveCredentials(
-                    personalOpenRouterKey: personalOpenRouterKey,
-                    workOpenRouterKey: workOpenRouterKey,
-                    proxyToken: proxyToken
-                )
-                currentStep = .cursor
-            } catch {
-                errorMessage = error.localizedDescription
-            }
-        }
     }
 
     private func setupNgrok() {
@@ -444,9 +440,18 @@ struct SetupWizardView: View {
                 ) { phase in
                     ngrokSetupPhase = phase
                 }
+                let normalizedStaticURL = setupResult.publicURL.absoluteString
+                try await controller.saveSetupCredentials(
+                    personalOpenRouterKey: personalOpenRouterKey,
+                    workOpenRouterKey: workOpenRouterKey,
+                    proxyToken: setupResult.proxyToken,
+                    ngrokAuthtoken: ngrokAuthtoken,
+                    ngrokStaticURL: normalizedStaticURL
+                )
                 ngrokPublicURL = setupResult.publicURL
-                ngrokStaticURL = setupResult.publicURL.absoluteString
+                ngrokStaticURL = normalizedStaticURL
                 proxyToken = setupResult.proxyToken
+                currentStep = .cursor
             } catch {
                 ngrokPublicURL = nil
                 errorMessage = error.localizedDescription

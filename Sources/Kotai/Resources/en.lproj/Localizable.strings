@@ -116,3 +116,7 @@
 "Enter a valid HTTPS URL without a path, query, or fragment." = "Enter a valid HTTPS URL without a path, query, or fragment.";
 "Restart ngrok" = "Restart ngrok";
 "Saved" = "Saved";
+"Connecting…" = "Connecting…";
+"Keychain returned status %lld." = "Keychain returned status %lld.";
+"Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai." = "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai.";
+"The stored Keychain value is not valid UTF-8." = "The stored Keychain value is not valid UTF-8.";
