@@ -1,0 +1,121 @@
+name: Kotai
+options:
+  bundleIdPrefix: com.justin
+  developmentLanguage: en
+  deploymentTarget:
+    macOS: "14.0"
+packages:
+  Hummingbird:
+    path: Vendor/hummingbird
+  AsyncHTTPClient:
+    url: https://github.com/swift-server/async-http-client.git
+    exactVersion: 1.36.1
+  SwiftNIO:
+    url: https://github.com/apple/swift-nio.git
+    exactVersion: 2.102.0
+  SwiftNIOExtras:
+    url: https://github.com/apple/swift-nio-extras.git
+    exactVersion: 1.35.1
+  SwiftHTTPTypes:
+    url: https://github.com/apple/swift-http-types.git
+    exactVersion: 1.7.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.9.4
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+  configs:
+    Release:
+      ARCHS: arm64
+      ONLY_ACTIVE_ARCH: NO
+      CODE_SIGN_STYLE: Manual
+      CODE_SIGN_IDENTITY: "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)"
+      DEVELOPMENT_TEAM: XDWKSAH7W3
+      ENABLE_HARDENED_RUNTIME: YES
+targets:
+  Kotai:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/Kotai
+        excludes:
+          - Resources/Info.plist
+          - Resources/*.entitlements
+    info:
+      path: Sources/Kotai/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Kotai
+        CFBundleIconFile: Kotai.icns
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        LSUIElement: true
+        SUFeedURL: https://littlebobert.github.io/kotai-appcast.xml
+        SUPublicEDKey: mXrUc4Vyw/EVamKI843gB/QyJzFNOuAjuqTAYHw4kzA=
+        SUEnableAutomaticChecks: true
+        SUAllowsAutomaticUpdates: false
+        SUAutomaticallyUpdate: false
+        SUVerifyUpdateBeforeExtraction: true
+    dependencies:
+      - package: Hummingbird
+        product: Hummingbird
+      - package: AsyncHTTPClient
+        product: AsyncHTTPClient
+      - package: SwiftNIO
+        product: NIOCore
+      - package: SwiftNIO
+        product: NIOHTTP1
+      - package: SwiftNIO
+        product: NIOPosix
+      - package: SwiftNIOExtras
+        product: NIOHTTPTypesHTTP1
+      - package: SwiftHTTPTypes
+        product: HTTPTypes
+      - package: Sparkle
+        product: Sparkle
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.justin.Kotai
+        PRODUCT_NAME: Kotai
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        GENERATE_INFOPLIST_FILE: NO
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)"
+          DEVELOPMENT_TEAM: XDWKSAH7W3
+          ENABLE_HARDENED_RUNTIME: YES
+  KotaiTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/KotaiTests
+    dependencies:
+      - target: Kotai
+      - package: Hummingbird
+        product: HummingbirdTesting
+      - package: AsyncHTTPClient
+        product: AsyncHTTPClient
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.justin.KotaiTests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: Apple Development
+        DEVELOPMENT_TEAM: XDWKSAH7W3
+schemes:
+  Kotai:
+    build:
+      targets:
+        Kotai: all
+        KotaiTests: [test]
+    test:
+      targets:
+        - KotaiTests

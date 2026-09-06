@@ -1,10 +1,10 @@
 "API key / proxy token" = "APIキー / プロキシトークン";
 "About Kotai" = "Kotaiについて";
 "About Kotai…" = "Kotaiについて…";
-"Account: %@" = "アカウント：%@";
 "Add both OpenRouter keys" = "OpenRouterキーを2つとも追加";
 "Back" = "戻る";
 "Cancel" = "キャンセル";
+"Check for Updates…" = "アップデートを確認…";
 "Client authentication" = "クライアント認証";
 "Connect clients" = "クライアントを接続";
 "Connect ngrok" = "ngrokに接続";
@@ -33,8 +33,6 @@
 "Kotai Settings" = "Kotai設定";
 "Kotai Setup" = "Kotaiセットアップ";
 "Kotai bug report" = "Kotai バグ報告";
-"Kotai keeps these in this Mac's Keychain and sends only the active key to OpenRouter." = "KotaiはこれらをこのMacのキーチェーンに保存し、使用中のキーだけをOpenRouterへ送信します。";
-"Kotai: %@" = "Kotai：%@";
 "Local proxy: %@" = "ローカルプロキシ：%@";
 "Made in Japan" = "日本製";
 "No diagnostic activity recorded." = "診断アクティビティはまだ記録されていません。";
@@ -44,7 +42,7 @@
 "OpenRouter accounts" = "OpenRouterアカウント";
 "OpenRouter chooser for Cursor, etc." = "Cursorなどで使えるOpenRouter選択ツール。";
 "Paste the authtoken from your ngrok dashboard." = "ngrokダッシュボードのauthtokenを貼り付けてください。";
-"Personal" = "個人";
+"Personal" = "個人用";
 "Personal API key" = "個人用APIキー";
 "Personal OpenRouter API key" = "個人用OpenRouter APIキー";
 "Proxy token" = "プロキシトークン";
@@ -67,7 +65,7 @@
 "Starting" = "起動中";
 "Starting ngrok…" = "ngrokを起動しています…";
 "Use the same proxy token everywhere, then choose the base URL for your client." = "すべてのクライアントで同じプロキシトークンを使用し、クライアントに合ったベースURLを選択してください。";
-"Work" = "仕事";
+"Work" = "仕事用";
 "Work API key" = "仕事用APIキー";
 "Work OpenRouter API key" = "仕事用OpenRouter APIキー";
 "ngrok could not start: %@" = "ngrokを起動できませんでした：%@";
@@ -77,3 +75,11 @@
 "Please describe what happened:" = "発生した問題について説明してください：";
 "Kotai diagnostic logs are attached. They exclude API keys, authentication tokens, prompts, and response bodies." = "Kotaiの診断ログを添付しています。APIキー、認証トークン、プロンプト、レスポンス本文は含まれません。";
 "Recent diagnostics:" = "最近の診断：";
+"Default account: %@" = "デフォルトアカウント：%@";
+"Default for unprefixed models" = "接頭辞なしモデルのデフォルト";
+"Kotai keeps these in this Mac's Keychain and sends each request with the key selected by its model prefix or the menu-bar default." = "KotaiはこれらをこのMacのキーチェーンに保存し、モデルの接頭辞またはメニューバーのデフォルトで選ばれたキーをリクエストごとにOpenRouterへ送信します。";
+"Kotai: %@ default" = "Kotai：%@（デフォルト）";
+"Model routing" = "モデルルーティング";
+"Personal model prefix" = "個人用モデルの接頭辞";
+"Use personal and work projects at the same time. Prefix any model ID with one of these patterns; Kotai removes the prefix before sending to OpenRouter. Unprefixed model IDs use the menu-bar default." = "個人用と仕事用のプロジェクトを同時に利用できます。モデルIDの先頭に次のいずれかの接頭辞を付けてください。KotaiはOpenRouterへ送信する前に接頭辞を取り除きます。接頭辞のないモデルIDには、メニューバーのデフォルトが使用されます。";
+"Work model prefix" = "仕事用モデルの接頭辞";

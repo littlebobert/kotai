@@ -2,3 +2,6 @@
 .DS_Store
 .swiftpm/
 DerivedData/
+.env.release
+xcuserdata/
+*.xcuserstate

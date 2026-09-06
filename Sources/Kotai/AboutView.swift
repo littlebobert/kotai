@@ -4,9 +4,10 @@ import SwiftUI
 struct AboutView: View {
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: "signpost.right.and.left")
-                .font(.system(size: 52, weight: .medium))
-                .foregroundStyle(.tint)
+            Image("KotaiIcon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 64, height: 64)
 
             Text("Kotai")
                 .font(.largeTitle.bold())

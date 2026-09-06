@@ -1,0 +1,698 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		098FC5CCCB93DA44FE85325A /* AccountMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F92E49FEAC01A7C9BDDE159 /* AccountMode.swift */; };
+		189B242E47C5E21F68599710 /* KotaiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 414BD807CE1DE877C13BDBF3 /* KotaiApp.swift */; };
+		1FCEB916FAC3688394145F19 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = BE1E9FCCC8C23F8D20467F7E /* NIOHTTP1 */; };
+		26078ED875D5C1397AF9DBC3 /* AsyncHTTPClient in Frameworks */ = {isa = PBXBuildFile; productRef = 015472657FC7B135619F47CA /* AsyncHTTPClient */; };
+		299DAA3F0D0D515F9FAC3C22 /* SetupWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4BF1750A9A7F5AB59887638 /* SetupWizardView.swift */; };
+		31FD8C72876F9E7A838A7967 /* ProxyConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1466CD2DA8612C82AC292AF /* ProxyConfigurationTests.swift */; };
+		32D37C547F96F25777446BF4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FEC7D38B67AF487A31A2BA33 /* Localizable.strings */; };
+		3686A399252CD0904E05455C /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64F440FC8B3881754594CA6 /* AboutView.swift */; };
+		415586939DD6DB06796A741C /* OpenRouterProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */; };
+		4E325A959BD2A91458D23CF2 /* WindowTitleSetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */; };
+		63B7A25AAF10256D03AA9323 /* OpenRouterRequestRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583CCCA5CE30281FF8ACAF0A /* OpenRouterRequestRouterTests.swift */; };
+		648C92D54FC701F28BBF7AF8 /* Kotai.icns in Resources */ = {isa = PBXBuildFile; fileRef = B1B535F95E38213C933FDE90 /* Kotai.icns */; };
+		6644632C40031DF3D239117A /* ModelRoutingGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196E30AEC591A52F38C65137 /* ModelRoutingGuide.swift */; };
+		71B1ED5F45BFD5AAF1DA56D7 /* SecureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8225133F174F76814E117CC9 /* SecureStore.swift */; };
+		74B5C7B007274E76C92E1526 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */; };
+		785DA07B4AD73DDC6194C299 /* AppController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825302CD8F058012CA2DBE80 /* AppController.swift */; };
+		7A081FBEC8AFEA8F59F2B11F /* Hummingbird in Frameworks */ = {isa = PBXBuildFile; productRef = CF47A5D9D8BB34C348547B27 /* Hummingbird */; };
+		7C2DC29158774EA75342A68F /* HTTPTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 658CF1B02FD19387744D52C7 /* HTTPTypes */; };
+		7C57931C145CDBC747D879C2 /* HummingbirdTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 297977BA3BA065055D49D07B /* HummingbirdTesting */; };
+		7DF8CEF51B61407CB430844C /* ProxyConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DDCF1DA7CB59A58DE9EEB8A /* ProxyConfiguration.swift */; };
+		9082561D9ACF7E3A8B502842 /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8F5F271EDA64C1B08EFE345F /* NIOCore */; };
+		9A120C3E23F84BC21ADC21C5 /* KotaiIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 209F4F1866BE4CA484DED4FB /* KotaiIcon.png */; };
+		9A389D4FE0B208AE9667A578 /* KotaiLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704305B8E8C5F61C3FFC177F /* KotaiLogger.swift */; };
+		A612D4132823FC35F899F459 /* WindowPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */; };
+		B3F9E9F31F804300AD9948CC /* NIOHTTPTypesHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = 0BF8F9EC5F585B6BDE6A3108 /* NIOHTTPTypesHTTP1 */; };
+		C48750E97CE9EE5C5C87E2B0 /* AsyncHTTPClient in Frameworks */ = {isa = PBXBuildFile; productRef = 135F01D9E13FA65D326CE5E7 /* AsyncHTTPClient */; };
+		D1C709771B0F8640F78D0B24 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 29ABF4D8F56232121C4C2B2D /* Sparkle */; };
+		D581CE795EBD760908DF2FA0 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC19527FEE5DE169CFB5E405 /* SettingsView.swift */; };
+		E8954E2E5EED844F21C1AE59 /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = 3A79CE5037F5CADE08EEDE52 /* NIOPosix */; };
+		E9BA4ECA7C36F34467F93220 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 720DC9F6B64A3842E6BDBED6 /* DiagnosticsView.swift */; };
+		EF5725B0288E5D0EA9EEA803 /* NgrokManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F31FCE02D24946AD7CF1152 /* NgrokManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2C55C3B40E3ED450F59F7EBF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC30052D174BEF71740F3E3D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 26387622D0477178BF6B91C4;
+			remoteInfo = Kotai;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		196E30AEC591A52F38C65137 /* ModelRoutingGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelRoutingGuide.swift; sourceTree = "<group>"; };
+		1C0E8FF3D4657210C14EDF65 /* Kotai.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kotai.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		209F4F1866BE4CA484DED4FB /* KotaiIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = KotaiIcon.png; sourceTree = "<group>"; };
+		25A72AC437443DD4C667C7D5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		414BD807CE1DE877C13BDBF3 /* KotaiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KotaiApp.swift; sourceTree = "<group>"; };
+		44905518439469E60E8DD0B7 /* hummingbird */ = {isa = PBXFileReference; lastKnownFileType = folder; name = hummingbird; path = Vendor/hummingbird; sourceTree = SOURCE_ROOT; };
+		4F31FCE02D24946AD7CF1152 /* NgrokManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NgrokManager.swift; sourceTree = "<group>"; };
+		4F92E49FEAC01A7C9BDDE159 /* AccountMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountMode.swift; sourceTree = "<group>"; };
+		583CCCA5CE30281FF8ACAF0A /* OpenRouterRequestRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterRequestRouterTests.swift; sourceTree = "<group>"; };
+		6DDCF1DA7CB59A58DE9EEB8A /* ProxyConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyConfiguration.swift; sourceTree = "<group>"; };
+		704305B8E8C5F61C3FFC177F /* KotaiLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KotaiLogger.swift; sourceTree = "<group>"; };
+		720DC9F6B64A3842E6BDBED6 /* DiagnosticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsView.swift; sourceTree = "<group>"; };
+		8225133F174F76814E117CC9 /* SecureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureStore.swift; sourceTree = "<group>"; };
+		825302CD8F058012CA2DBE80 /* AppController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppController.swift; sourceTree = "<group>"; };
+		8C281B681D5ADC13818F570D /* KotaiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KotaiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		93A6B0C5196695A46D721EA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTitleSetter.swift; sourceTree = "<group>"; };
+		B1B535F95E38213C933FDE90 /* Kotai.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Kotai.icns; sourceTree = "<group>"; };
+		C4BF1750A9A7F5AB59887638 /* SetupWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupWizardView.swift; sourceTree = "<group>"; };
+		CC19527FEE5DE169CFB5E405 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D1466CD2DA8612C82AC292AF /* ProxyConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyConfigurationTests.swift; sourceTree = "<group>"; };
+		D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPresentation.swift; sourceTree = "<group>"; };
+		E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
+		E64F440FC8B3881754594CA6 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterProxy.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7AB604B717A8B19248AEBA81 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7A081FBEC8AFEA8F59F2B11F /* Hummingbird in Frameworks */,
+				26078ED875D5C1397AF9DBC3 /* AsyncHTTPClient in Frameworks */,
+				9082561D9ACF7E3A8B502842 /* NIOCore in Frameworks */,
+				1FCEB916FAC3688394145F19 /* NIOHTTP1 in Frameworks */,
+				E8954E2E5EED844F21C1AE59 /* NIOPosix in Frameworks */,
+				B3F9E9F31F804300AD9948CC /* NIOHTTPTypesHTTP1 in Frameworks */,
+				7C2DC29158774EA75342A68F /* HTTPTypes in Frameworks */,
+				D1C709771B0F8640F78D0B24 /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FCBB2DE8E610B2EA42F88988 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C57931C145CDBC747D879C2 /* HummingbirdTesting in Frameworks */,
+				C48750E97CE9EE5C5C87E2B0 /* AsyncHTTPClient in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		45B08B24791CAFF254453378 /* KotaiTests */ = {
+			isa = PBXGroup;
+			children = (
+				583CCCA5CE30281FF8ACAF0A /* OpenRouterRequestRouterTests.swift */,
+				D1466CD2DA8612C82AC292AF /* ProxyConfigurationTests.swift */,
+			);
+			name = KotaiTests;
+			path = Tests/KotaiTests;
+			sourceTree = "<group>";
+		};
+		52DAD33DF6C470D125A60167 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B1B535F95E38213C933FDE90 /* Kotai.icns */,
+				209F4F1866BE4CA484DED4FB /* KotaiIcon.png */,
+				FEC7D38B67AF487A31A2BA33 /* Localizable.strings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		55B5E7649E7FCDF272833E5D /* Kotai */ = {
+			isa = PBXGroup;
+			children = (
+				E64F440FC8B3881754594CA6 /* AboutView.swift */,
+				4F92E49FEAC01A7C9BDDE159 /* AccountMode.swift */,
+				825302CD8F058012CA2DBE80 /* AppController.swift */,
+				E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */,
+				720DC9F6B64A3842E6BDBED6 /* DiagnosticsView.swift */,
+				414BD807CE1DE877C13BDBF3 /* KotaiApp.swift */,
+				704305B8E8C5F61C3FFC177F /* KotaiLogger.swift */,
+				196E30AEC591A52F38C65137 /* ModelRoutingGuide.swift */,
+				4F31FCE02D24946AD7CF1152 /* NgrokManager.swift */,
+				F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */,
+				6DDCF1DA7CB59A58DE9EEB8A /* ProxyConfiguration.swift */,
+				8225133F174F76814E117CC9 /* SecureStore.swift */,
+				CC19527FEE5DE169CFB5E405 /* SettingsView.swift */,
+				C4BF1750A9A7F5AB59887638 /* SetupWizardView.swift */,
+				D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */,
+				A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */,
+				52DAD33DF6C470D125A60167 /* Resources */,
+			);
+			name = Kotai;
+			path = Sources/Kotai;
+			sourceTree = "<group>";
+		};
+		9FD1DBE6F1C5A7C00CC9A325 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				44905518439469E60E8DD0B7 /* hummingbird */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		DFD0C53948E0DDD0363F131A = {
+			isa = PBXGroup;
+			children = (
+				55B5E7649E7FCDF272833E5D /* Kotai */,
+				45B08B24791CAFF254453378 /* KotaiTests */,
+				9FD1DBE6F1C5A7C00CC9A325 /* Packages */,
+				F5422EF01D871AFCF08F44E7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F5422EF01D871AFCF08F44E7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1C0E8FF3D4657210C14EDF65 /* Kotai.app */,
+				8C281B681D5ADC13818F570D /* KotaiTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		26387622D0477178BF6B91C4 /* Kotai */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6805E48FCB1CDA2609499F69 /* Build configuration list for PBXNativeTarget "Kotai" */;
+			buildPhases = (
+				2C7D94E2AF5FA26B8F8B6573 /* Sources */,
+				1029DDBE3FC47BB7342AB2F9 /* Resources */,
+				7AB604B717A8B19248AEBA81 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Kotai;
+			packageProductDependencies = (
+				CF47A5D9D8BB34C348547B27 /* Hummingbird */,
+				015472657FC7B135619F47CA /* AsyncHTTPClient */,
+				8F5F271EDA64C1B08EFE345F /* NIOCore */,
+				BE1E9FCCC8C23F8D20467F7E /* NIOHTTP1 */,
+				3A79CE5037F5CADE08EEDE52 /* NIOPosix */,
+				0BF8F9EC5F585B6BDE6A3108 /* NIOHTTPTypesHTTP1 */,
+				658CF1B02FD19387744D52C7 /* HTTPTypes */,
+				29ABF4D8F56232121C4C2B2D /* Sparkle */,
+			);
+			productName = Kotai;
+			productReference = 1C0E8FF3D4657210C14EDF65 /* Kotai.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3E2D0F8A3FE4244DB3BE4012 /* KotaiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1274C0CEEE04E96FF30E2C71 /* Build configuration list for PBXNativeTarget "KotaiTests" */;
+			buildPhases = (
+				7C703778740FB2CDEA79FA25 /* Sources */,
+				FCBB2DE8E610B2EA42F88988 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				95654C85A30BE0A6B7878C25 /* PBXTargetDependency */,
+			);
+			name = KotaiTests;
+			packageProductDependencies = (
+				297977BA3BA065055D49D07B /* HummingbirdTesting */,
+				135F01D9E13FA65D326CE5E7 /* AsyncHTTPClient */,
+			);
+			productName = KotaiTests;
+			productReference = 8C281B681D5ADC13818F570D /* KotaiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DC30052D174BEF71740F3E3D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					26387622D0477178BF6B91C4 = {
+						DevelopmentTeam = XDWKSAH7W3;
+						ProvisioningStyle = Manual;
+					};
+					3E2D0F8A3FE4244DB3BE4012 = {
+						DevelopmentTeam = XDWKSAH7W3;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = A94BAE21D9EDB9D8A3E610DA /* Build configuration list for PBXProject "Kotai" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				ja,
+			);
+			mainGroup = DFD0C53948E0DDD0363F131A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6B294E7ED3B1D973109DB3CB /* XCRemoteSwiftPackageReference "async-http-client" */,
+				FBA3125DFE1F7CD4F878777A /* XCRemoteSwiftPackageReference "Sparkle" */,
+				AC866D0AAFB19D7457E62136 /* XCRemoteSwiftPackageReference "swift-http-types" */,
+				F521D0772D971DC44C826073 /* XCRemoteSwiftPackageReference "swift-nio" */,
+				649E5741C95E806F2A279575 /* XCRemoteSwiftPackageReference "swift-nio-extras" */,
+				BDF297D971055B7A6C872355 /* XCLocalSwiftPackageReference "Vendor/hummingbird" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = F5422EF01D871AFCF08F44E7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				26387622D0477178BF6B91C4 /* Kotai */,
+				3E2D0F8A3FE4244DB3BE4012 /* KotaiTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1029DDBE3FC47BB7342AB2F9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				648C92D54FC701F28BBF7AF8 /* Kotai.icns in Resources */,
+				9A120C3E23F84BC21ADC21C5 /* KotaiIcon.png in Resources */,
+				32D37C547F96F25777446BF4 /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2C7D94E2AF5FA26B8F8B6573 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3686A399252CD0904E05455C /* AboutView.swift in Sources */,
+				098FC5CCCB93DA44FE85325A /* AccountMode.swift in Sources */,
+				785DA07B4AD73DDC6194C299 /* AppController.swift in Sources */,
+				74B5C7B007274E76C92E1526 /* AutoUpdateService.swift in Sources */,
+				E9BA4ECA7C36F34467F93220 /* DiagnosticsView.swift in Sources */,
+				189B242E47C5E21F68599710 /* KotaiApp.swift in Sources */,
+				9A389D4FE0B208AE9667A578 /* KotaiLogger.swift in Sources */,
+				6644632C40031DF3D239117A /* ModelRoutingGuide.swift in Sources */,
+				EF5725B0288E5D0EA9EEA803 /* NgrokManager.swift in Sources */,
+				415586939DD6DB06796A741C /* OpenRouterProxy.swift in Sources */,
+				7DF8CEF51B61407CB430844C /* ProxyConfiguration.swift in Sources */,
+				71B1ED5F45BFD5AAF1DA56D7 /* SecureStore.swift in Sources */,
+				D581CE795EBD760908DF2FA0 /* SettingsView.swift in Sources */,
+				299DAA3F0D0D515F9FAC3C22 /* SetupWizardView.swift in Sources */,
+				A612D4132823FC35F899F459 /* WindowPresentation.swift in Sources */,
+				4E325A959BD2A91458D23CF2 /* WindowTitleSetter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7C703778740FB2CDEA79FA25 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				63B7A25AAF10256D03AA9323 /* OpenRouterRequestRouterTests.swift in Sources */,
+				31FD8C72876F9E7A838A7967 /* ProxyConfigurationTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		95654C85A30BE0A6B7878C25 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 26387622D0477178BF6B91C4 /* Kotai */;
+			targetProxy = 2C55C3B40E3ED450F59F7EBF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		FEC7D38B67AF487A31A2BA33 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				93A6B0C5196695A46D721EA1 /* en */,
+				25A72AC437443DD4C667C7D5 /* ja */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0AD12A00AC09E30EEAF39464 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = XDWKSAH7W3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/Kotai/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.Kotai;
+				PRODUCT_NAME = Kotai;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		3F554DD61C55914055234080 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/Kotai/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.Kotai;
+				PRODUCT_NAME = Kotai;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		657EC3E2B4F2A031720E6BBB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		81EF8CEEF8596BF93AA355C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = XDWKSAH7W3;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		A26D9CFB32ECCEB6096A2200 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = XDWKSAH7W3;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.KotaiTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kotai.app/Contents/MacOS/Kotai";
+			};
+			name = Debug;
+		};
+		CF9411686137B0151F280922 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = XDWKSAH7W3;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.justin.KotaiTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kotai.app/Contents/MacOS/Kotai";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1274C0CEEE04E96FF30E2C71 /* Build configuration list for PBXNativeTarget "KotaiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A26D9CFB32ECCEB6096A2200 /* Debug */,
+				CF9411686137B0151F280922 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6805E48FCB1CDA2609499F69 /* Build configuration list for PBXNativeTarget "Kotai" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0AD12A00AC09E30EEAF39464 /* Debug */,
+				3F554DD61C55914055234080 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A94BAE21D9EDB9D8A3E610DA /* Build configuration list for PBXProject "Kotai" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				657EC3E2B4F2A031720E6BBB /* Debug */,
+				81EF8CEEF8596BF93AA355C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BDF297D971055B7A6C872355 /* XCLocalSwiftPackageReference "Vendor/hummingbird" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/hummingbird;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		649E5741C95E806F2A279575 /* XCRemoteSwiftPackageReference "swift-nio-extras" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio-extras.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.35.1;
+			};
+		};
+		6B294E7ED3B1D973109DB3CB /* XCRemoteSwiftPackageReference "async-http-client" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swift-server/async-http-client.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.36.1;
+			};
+		};
+		AC866D0AAFB19D7457E62136 /* XCRemoteSwiftPackageReference "swift-http-types" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-http-types.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.7.0;
+			};
+		};
+		F521D0772D971DC44C826073 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.102.0;
+			};
+		};
+		FBA3125DFE1F7CD4F878777A /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.9.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		015472657FC7B135619F47CA /* AsyncHTTPClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6B294E7ED3B1D973109DB3CB /* XCRemoteSwiftPackageReference "async-http-client" */;
+			productName = AsyncHTTPClient;
+		};
+		0BF8F9EC5F585B6BDE6A3108 /* NIOHTTPTypesHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 649E5741C95E806F2A279575 /* XCRemoteSwiftPackageReference "swift-nio-extras" */;
+			productName = NIOHTTPTypesHTTP1;
+		};
+		135F01D9E13FA65D326CE5E7 /* AsyncHTTPClient */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6B294E7ED3B1D973109DB3CB /* XCRemoteSwiftPackageReference "async-http-client" */;
+			productName = AsyncHTTPClient;
+		};
+		297977BA3BA065055D49D07B /* HummingbirdTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HummingbirdTesting;
+		};
+		29ABF4D8F56232121C4C2B2D /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FBA3125DFE1F7CD4F878777A /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+		3A79CE5037F5CADE08EEDE52 /* NIOPosix */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F521D0772D971DC44C826073 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOPosix;
+		};
+		658CF1B02FD19387744D52C7 /* HTTPTypes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AC866D0AAFB19D7457E62136 /* XCRemoteSwiftPackageReference "swift-http-types" */;
+			productName = HTTPTypes;
+		};
+		8F5F271EDA64C1B08EFE345F /* NIOCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F521D0772D971DC44C826073 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOCore;
+		};
+		BE1E9FCCC8C23F8D20467F7E /* NIOHTTP1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F521D0772D971DC44C826073 /* XCRemoteSwiftPackageReference "swift-nio" */;
+			productName = NIOHTTP1;
+		};
+		CF47A5D9D8BB34C348547B27 /* Hummingbird */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Hummingbird;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DC30052D174BEF71740F3E3D /* Project object */;
+}

@@ -14,7 +14,7 @@ struct DiagnosticsView: View {
                     systemImage: controller.runtimeStatus.symbolName
                 )
                 Spacer()
-                Text("Account: \(controller.accountMode.displayName)")
+                Text("Default account: \(controller.accountMode.displayName)")
                     .foregroundStyle(.secondary)
             }
 

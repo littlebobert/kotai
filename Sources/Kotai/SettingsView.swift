@@ -25,6 +25,10 @@ struct SettingsView: View {
                 )
             }
 
+            Section("Model routing") {
+                ModelRoutingGuide()
+            }
+
             Section("Client authentication") {
                 SecureField("Proxy token", text: $proxyToken)
 
@@ -104,9 +108,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(width: 520)
-        .scrollDisabled(true)
+        .frame(width: 560, height: 640)
         .background {
             WindowTitleSetter(title: String(localized: "Kotai Settings"))
                 .frame(width: 0, height: 0)

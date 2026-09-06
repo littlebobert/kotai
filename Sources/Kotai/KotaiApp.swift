@@ -39,6 +39,9 @@ private struct MenuBarContent: View {
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
+        Text("Default for unprefixed models")
+            .disabled(true)
+
         ForEach(AccountMode.allCases, id: \.self) { accountMode in
             Button {
                 controller.selectAccountMode(accountMode)
@@ -72,6 +75,11 @@ private struct MenuBarContent: View {
             presentAboutWindow(openWindow: openWindow)
         }
 
+        Button("Check for Updates…") {
+            controller.autoUpdates.checkForUpdates()
+        }
+        .disabled(!controller.autoUpdates.canCheckForUpdates)
+
         Divider()
 
         Button("Quit Kotai") {
@@ -90,7 +98,7 @@ private struct MenuBarLabel: View {
 
     var body: some View {
         Label(
-            "Kotai: \(controller.accountMode.displayName)",
+            "Kotai: \(controller.accountMode.displayName) default",
             systemImage: "signpost.right.and.left"
         )
         .task {

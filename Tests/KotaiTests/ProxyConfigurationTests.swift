@@ -1,6 +1,7 @@
 import AsyncHTTPClient
 import Hummingbird
 import HummingbirdTesting
+import NIOCore
 import Testing
 @testable import Kotai
 
@@ -35,6 +36,69 @@ struct ProxyConfigurationTests {
         try await application.test(.router) { client in
             try await client.execute(uri: "/mode", method: .get) { response in
                 #expect(response.status == .notFound)
+            }
+        }
+        try await httpClient.shutdown()
+    }
+
+    @Test
+    func malformedPrefixedModelReturnsBadRequestBeforeUpstream() async throws {
+        let (application, httpClient) = makeApplication(
+            credentials: [.proxyToken: "test-proxy-token"]
+        )
+        let headers: HTTPFields = [
+            .authorization: "Bearer test-proxy-token",
+            .contentType: "application/json",
+        ]
+        let body = ByteBuffer(
+            string: #"{"model":"kotai/unknown/openai/gpt-5"}"#
+        )
+
+        try await application.test(.router) { client in
+            try await client.execute(
+                uri: "/v1/chat/completions",
+                method: .post,
+                headers: headers,
+                body: body
+            ) { response in
+                #expect(response.status == .badRequest)
+                #expect(
+                    String(buffer: response.body)
+                        == #"{"error":"Malformed Kotai model routing"}"#
+                )
+            }
+        }
+        try await httpClient.shutdown()
+    }
+
+    @Test
+    func missingRoutedAccountKeyReturnsServiceUnavailable() async throws {
+        let (application, httpClient) = makeApplication(
+            credentials: [
+                .proxyToken: "test-proxy-token",
+                .personalOpenRouterKey: "personal-test-key",
+            ]
+        )
+        let headers: HTTPFields = [
+            .authorization: "Bearer test-proxy-token",
+            .contentType: "application/json",
+        ]
+        let body = ByteBuffer(
+            string: #"{"model":"kotai/work/anthropic/claude"}"#
+        )
+
+        try await application.test(.router) { client in
+            try await client.execute(
+                uri: "/v1/chat/completions",
+                method: .post,
+                headers: headers,
+                body: body
+            ) { response in
+                #expect(response.status == .serviceUnavailable)
+                #expect(
+                    String(buffer: response.body)
+                        == #"{"error":"The work OpenRouter key is not configured"}"#
+                )
             }
         }
         try await httpClient.shutdown()
@@ -114,11 +178,17 @@ struct ProxyConfigurationTests {
         #expect(redactedText == logText)
     }
 
-    private func makeApplication() -> (
+    private func makeApplication(
+        accountMode: AccountMode = .personal,
+        credentials: [ProxyConfiguration.Credential: String]? = nil
+    ) -> (
         application: Application<OpenRouterProxy>,
         httpClient: HTTPClient
     ) {
-        let configuration = ProxyConfiguration()
+        let configuration = ProxyConfiguration(
+            accountMode: accountMode,
+            initialCredentials: credentials
+        )
         let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
         let responder = OpenRouterProxy(
             configuration: configuration,

@@ -71,22 +71,51 @@ struct OpenRouterProxy: HTTPResponder {
             )
         }
 
+        let defaultAccountMode = await configuration.accountMode
+        let routingResult: OpenRouterRequestRouting
+        do {
+            routingResult = try await resolveRouting(
+                for: request,
+                defaultAccountMode: defaultAccountMode
+            )
+        } catch let routingError as OpenRouterRoutingError {
+            KotaiLogger.shared.warning(
+                "Proxy \(requestID) rejected malformed model routing"
+            )
+            return jsonResponse(
+                status: .badRequest,
+                object: ["error": routingError.safeDescription]
+            )
+        }
+
         guard
-            let openRouterKey = try await configuration.activeOpenRouterKey(),
+            let openRouterKey = try await configuration.openRouterKey(
+                for: routingResult.accountMode
+            ),
             !openRouterKey.isEmpty
         else {
+            let accountName = routingResult.accountMode.rawValue
             KotaiLogger.shared.error(
-                "Proxy \(requestID) has no active OpenRouter key"
+                "Proxy \(requestID) has no \(accountName) OpenRouter key"
             )
             return jsonResponse(
                 status: .serviceUnavailable,
-                object: ["error": "The active OpenRouter key is not configured"]
+                object: [
+                    "error": "The \(accountName) OpenRouter key is not configured"
+                ]
             )
         }
+
+        let normalizedModel = routingResult.normalizedModel ?? "unchanged"
+        KotaiLogger.shared.info(
+            "Proxy \(requestID) routed; account=" +
+                "\(routingResult.accountMode.rawValue) model=\(normalizedModel)"
+        )
 
         do {
             return try await forward(
                 request,
+                body: routingResult.body,
                 openRouterKey: openRouterKey,
                 upstreamURL: upstreamURL,
                 requestID: requestID,
@@ -115,8 +144,30 @@ struct OpenRouterProxy: HTTPResponder {
         }
     }
 
+    private func resolveRouting(
+        for request: Request,
+        defaultAccountMode: AccountMode
+    ) async throws -> OpenRouterRequestRouting {
+        guard request.method != .get && request.method != .head else {
+            return OpenRouterRequestRouting(
+                accountMode: defaultAccountMode,
+                body: nil,
+                normalizedModel: nil
+            )
+        }
+
+        let body = try await request.body.collect(
+            upTo: Self.maximumRequestBodySize
+        )
+        return try OpenRouterRequestRouter.resolve(
+            body: body,
+            defaultAccountMode: defaultAccountMode
+        )
+    }
+
     private func forward(
         _ request: Request,
+        body: ByteBuffer?,
         openRouterKey: String,
         upstreamURL: URL,
         requestID: String,
@@ -133,10 +184,7 @@ struct OpenRouterProxy: HTTPResponder {
         )
         removeHopByHopHeaders(from: &upstreamRequest.headers)
 
-        if request.method != .get && request.method != .head {
-            let body = try await request.body.collect(
-                upTo: Self.maximumRequestBodySize
-            )
+        if let body {
             upstreamRequest.body = .bytes(body)
             KotaiLogger.shared.debug(
                 "Proxy \(requestID) buffered \(body.readableBytes) request bytes"
@@ -174,6 +222,75 @@ struct OpenRouterProxy: HTTPResponder {
             ),
             headers: responseHeaders,
             body: ResponseBody(asyncSequence: upstreamResponse.body)
+        )
+    }
+}
+
+
+enum OpenRouterRoutingError: Error, Equatable {
+    case malformedModel
+
+    var safeDescription: String {
+        "Malformed Kotai model routing"
+    }
+}
+
+struct OpenRouterRequestRouting {
+    let accountMode: AccountMode
+    let body: ByteBuffer?
+    let normalizedModel: String?
+}
+
+enum OpenRouterRequestRouter {
+    private static let prefix = "kotai/"
+
+    static func resolve(
+        body: ByteBuffer,
+        defaultAccountMode: AccountMode
+    ) throws -> OpenRouterRequestRouting {
+        let data = Data(body.readableBytesView)
+        guard
+            let jsonValue = try? JSONSerialization.jsonObject(with: data),
+            var object = jsonValue as? [String: Any],
+            let model = object["model"] as? String
+        else {
+            return OpenRouterRequestRouting(
+                accountMode: defaultAccountMode,
+                body: body,
+                normalizedModel: nil
+            )
+        }
+
+        guard model.hasPrefix(prefix) else {
+            return OpenRouterRequestRouting(
+                accountMode: defaultAccountMode,
+                body: body,
+                normalizedModel: model
+            )
+        }
+
+        let components = model.split(separator: "/", omittingEmptySubsequences: false)
+        guard
+            components.count >= 3,
+            components[0] == "kotai",
+            let accountMode = AccountMode(rawValue: String(components[1])),
+            components.dropFirst(2).allSatisfy({ !$0.isEmpty })
+        else {
+            throw OpenRouterRoutingError.malformedModel
+        }
+
+        let normalizedModel = components.dropFirst(2).joined(separator: "/")
+        object["model"] = normalizedModel
+        let rewrittenData = try JSONSerialization.data(withJSONObject: object)
+        var rewrittenBody = ByteBufferAllocator().buffer(
+            capacity: rewrittenData.count
+        )
+        rewrittenBody.writeBytes(rewrittenData)
+
+        return OpenRouterRequestRouting(
+            accountMode: accountMode,
+            body: rewrittenBody,
+            normalizedModel: normalizedModel
         )
     }
 }
@@ -228,7 +345,9 @@ private func jsonResponse(
     status: HTTPResponse.Status,
     object: [String: String]
 ) -> Response {
-    let data = try! JSONSerialization.data(withJSONObject: object)
+    guard let data = try? JSONSerialization.data(withJSONObject: object) else {
+        return Response(status: .internalServerError)
+    }
     var buffer = ByteBufferAllocator().buffer(capacity: data.count)
     buffer.writeBytes(data)
 

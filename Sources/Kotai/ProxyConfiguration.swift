@@ -16,10 +16,17 @@ actor ProxyConfiguration {
 
     init(
         accountMode: AccountMode = .personal,
-        secureStore: SecureStore = SecureStore()
+        secureStore: SecureStore = SecureStore(),
+        initialCredentials: [Credential: String]? = nil
     ) {
         self.accountMode = accountMode
         self.secureStore = secureStore
+        self.credentialCache = initialCredentials
+        if let initialCredentials {
+            for value in initialCredentials.values {
+                KotaiLogger.shared.registerSensitiveValue(value)
+            }
+        }
     }
 
     func setAccountMode(_ accountMode: AccountMode) {
@@ -38,7 +45,7 @@ actor ProxyConfiguration {
         credentialCache = credentials
     }
 
-    func activeOpenRouterKey() throws -> String? {
+    func openRouterKey(for accountMode: AccountMode) throws -> String? {
         switch accountMode {
         case .personal:
             try credential(.personalOpenRouterKey)

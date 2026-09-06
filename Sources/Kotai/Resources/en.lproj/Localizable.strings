@@ -1,10 +1,10 @@
 "API key / proxy token" = "API key / proxy token";
 "About Kotai" = "About Kotai";
 "About Kotai…" = "About Kotai…";
-"Account: %@" = "Account: %@";
 "Add both OpenRouter keys" = "Add both OpenRouter keys";
 "Back" = "Back";
 "Cancel" = "Cancel";
+"Check for Updates…" = "Check for Updates…";
 "Client authentication" = "Client authentication";
 "Connect clients" = "Connect clients";
 "Connect ngrok" = "Connect ngrok";
@@ -33,8 +33,6 @@
 "Kotai Settings" = "Kotai Settings";
 "Kotai Setup" = "Kotai Setup";
 "Kotai bug report" = "Kotai bug report";
-"Kotai keeps these in this Mac's Keychain and sends only the active key to OpenRouter." = "Kotai keeps these in this Mac's Keychain and sends only the active key to OpenRouter.";
-"Kotai: %@" = "Kotai: %@";
 "Local proxy: %@" = "Local proxy: %@";
 "Made in Japan" = "Made in Japan";
 "No diagnostic activity recorded." = "No diagnostic activity recorded.";
@@ -77,3 +75,11 @@
 "Please describe what happened:" = "Please describe what happened:";
 "Kotai diagnostic logs are attached. They exclude API keys, authentication tokens, prompts, and response bodies." = "Kotai diagnostic logs are attached. They exclude API keys, authentication tokens, prompts, and response bodies.";
 "Recent diagnostics:" = "Recent diagnostics:";
+"Default account: %@" = "Default account: %@";
+"Default for unprefixed models" = "Default for unprefixed models";
+"Kotai keeps these in this Mac's Keychain and sends each request with the key selected by its model prefix or the menu-bar default." = "Kotai keeps these in this Mac's Keychain and sends each request with the key selected by its model prefix or the menu-bar default.";
+"Kotai: %@ default" = "Kotai: %@ default";
+"Model routing" = "Model routing";
+"Personal model prefix" = "Personal model prefix";
+"Use personal and work projects at the same time. Prefix any model ID with one of these patterns; Kotai removes the prefix before sending to OpenRouter. Unprefixed model IDs use the menu-bar default." = "Use personal and work projects at the same time. Prefix any model ID with one of these patterns; Kotai removes the prefix before sending to OpenRouter. Unprefixed model IDs use the menu-bar default.";
+"Work model prefix" = "Work model prefix";

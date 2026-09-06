@@ -45,18 +45,21 @@ struct SetupWizardView: View {
             header
             Divider()
 
-            Group {
-                switch currentStep {
-                case .openRouter:
-                    openRouterStep
-                case .ngrok:
-                    ngrokStep
-                case .cursor:
-                    cursorStep
+            ScrollView {
+                Group {
+                    switch currentStep {
+                    case .openRouter:
+                        openRouterStep
+                    case .ngrok:
+                        ngrokStep
+                    case .cursor:
+                        cursorStep
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .padding(28)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(28)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             Divider()
             footer
@@ -74,9 +77,10 @@ struct SetupWizardView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Image(systemName: "signpost.right.and.left.circle")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(.tint)
+                Image("KotaiIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Set up Kotai")
@@ -101,7 +105,7 @@ struct SetupWizardView: View {
         VStack(alignment: .leading, spacing: 18) {
             stepTitle(
                 "Add both OpenRouter keys",
-                detail: "Kotai keeps these in this Mac's Keychain and sends only the active key to OpenRouter."
+                detail: "Kotai keeps these in this Mac's Keychain and sends each request with the key selected by its model prefix or the menu-bar default."
             )
 
             SecureField("Personal OpenRouter API key", text: $personalOpenRouterKey)
@@ -188,6 +192,12 @@ struct SetupWizardView: View {
                 title: "Generic OpenRouter-compatible base URL",
                 value: genericBaseURL
             )
+
+            Divider()
+
+            Text("Model routing")
+                .font(.headline)
+            ModelRoutingGuide()
 
             Text("In Cursor, use its OpenAI API key field and Override OpenAI Base URL. Other clients must support an OpenAI-compatible custom base URL.")
                 .font(.callout)

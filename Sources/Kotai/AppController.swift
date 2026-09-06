@@ -42,6 +42,9 @@ final class AppController {
     }
 
     private static let proxyPort = 18_742
+    private static var hasInstalledApplicationIcon = false
+
+    let autoUpdates = AutoUpdateService()
 
     private let configuration: ProxyConfiguration
     private let ngrokManager = NgrokManager()
@@ -55,6 +58,8 @@ final class AppController {
     private(set) var shouldShowSetupWizard = false
 
     init() {
+        Self.installApplicationIcon()
+
         let storedMode = UserDefaults.standard.string(forKey: "account-mode")
             .flatMap(AccountMode.init(rawValue:))
             ?? .personal
@@ -74,6 +79,24 @@ final class AppController {
         )
     }
 
+    private static func installApplicationIcon() {
+        guard !hasInstalledApplicationIcon else {
+            return
+        }
+        hasInstalledApplicationIcon = true
+
+        let applicationIcon = NSImage(named: "KotaiIcon") ?? Bundle.main
+            .url(forResource: "Kotai", withExtension: "icns")
+            .flatMap(NSImage.init(contentsOf:))
+
+        guard let applicationIcon else {
+            KotaiLogger.shared.warning("Packaged application icon could not be loaded")
+            return
+        }
+
+        NSApplication.shared.applicationIconImage = applicationIcon
+    }
+
     var statusDetail: String? {
         if case .failed(let message) = runtimeStatus {
             return message
@@ -83,6 +106,7 @@ final class AppController {
 
     func start() {
         KotaiLogger.shared.info("App starting")
+        autoUpdates.start()
         startProxy()
         Task {
             await refreshRuntime()
@@ -93,7 +117,7 @@ final class AppController {
         self.accountMode = accountMode
         UserDefaults.standard.set(accountMode.rawValue, forKey: "account-mode")
         KotaiLogger.shared.info(
-            "Active account changed to \(accountMode.rawValue)"
+            "Default account changed to \(accountMode.rawValue)"
         )
 
         Task {
