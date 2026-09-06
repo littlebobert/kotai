@@ -56,7 +56,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
         LSUIElement: true
-        SUFeedURL: https://littlebobert.github.io/kotai-appcast.xml
+        SUFeedURL: https://kotai.jp/kotai-appcast.xml
         SUPublicEDKey: mXrUc4Vyw/EVamKI843gB/QyJzFNOuAjuqTAYHw4kzA=
         SUEnableAutomaticChecks: true
         SUAllowsAutomaticUpdates: false

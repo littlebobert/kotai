@@ -147,8 +147,12 @@ ID team, and the `sasu-notary` keychain profile.
 Sparkle 2.9.4 is configured by `project.yml`. Its public EdDSA key is embedded in
 the app. The private key remains in the login Keychain under Sparkle account
 `kotai`; release scripts pass that account to `generate_appcast`. The public feed
-is `https://littlebobert.github.io/kotai-appcast.xml` and its product link is
-`https://littlebobert.github.io/kotai.html`.
+is `https://kotai.jp/kotai-appcast.xml` and its product link is
+`https://kotai.jp/`.
+
+For compatibility, `https://littlebobert.github.io/kotai-appcast.xml` remains
+served for 0.1.0 clients. The next higher build bridges those clients to the
+custom-domain feed.
 
 Build and sign the arm64 application bundle with hardened runtime:
 
