@@ -504,8 +504,8 @@ xcrun stapler validate "$VERIFY_DIR/extracted/Kotai.app"
 spctl --assess --type execute --verbose=4 "$VERIFY_DIR/extracted/Kotai.app"
 
 for ATTEMPT in {1..24}; do
-  if curl -fL "$PUBLIC_APPCAST_URL" -o "$VERIFY_DIR/appcast.xml" 2>/dev/null \
-      && curl -fL "$PUBLIC_LANDING_URL" -o "$VERIFY_DIR/landing.html" 2>/dev/null \
+  if curl -fL --connect-timeout 3 --max-time 8 "$PUBLIC_APPCAST_URL" -o "$VERIFY_DIR/appcast.xml" 2>/dev/null \
+      && curl -fL --connect-timeout 3 --max-time 8 "$PUBLIC_LANDING_URL" -o "$VERIFY_DIR/landing.html" 2>/dev/null \
       && xmllint --noout "$VERIFY_DIR/appcast.xml" \
       && grep -Fq "<sparkle:version>$BUILD_NUMBER</sparkle:version>" "$VERIFY_DIR/appcast.xml" \
       && grep -Fq "$DOWNLOAD_URL" "$VERIFY_DIR/appcast.xml" \
