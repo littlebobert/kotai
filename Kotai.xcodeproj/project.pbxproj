@@ -22,9 +22,11 @@
 		63B7A25AAF10256D03AA9323 /* OpenRouterRequestRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583CCCA5CE30281FF8ACAF0A /* OpenRouterRequestRouterTests.swift */; };
 		648C92D54FC701F28BBF7AF8 /* Kotai.icns in Resources */ = {isa = PBXBuildFile; fileRef = B1B535F95E38213C933FDE90 /* Kotai.icns */; };
 		6644632C40031DF3D239117A /* ModelRoutingGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 196E30AEC591A52F38C65137 /* ModelRoutingGuide.swift */; };
+		69D3F8227FCAA32642995B38 /* RevealableSecureField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE4CB6480214E9F122C9AB5 /* RevealableSecureField.swift */; };
 		71B1ED5F45BFD5AAF1DA56D7 /* SecureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8225133F174F76814E117CC9 /* SecureStore.swift */; };
 		74B5C7B007274E76C92E1526 /* AutoUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */; };
 		785DA07B4AD73DDC6194C299 /* AppController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825302CD8F058012CA2DBE80 /* AppController.swift */; };
+		7902CEB090EBDE11F52078E1 /* StaticURLPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9204A40E239CF2E7830C0ABD /* StaticURLPrompt.swift */; };
 		7A081FBEC8AFEA8F59F2B11F /* Hummingbird in Frameworks */ = {isa = PBXBuildFile; productRef = CF47A5D9D8BB34C348547B27 /* Hummingbird */; };
 		7C2DC29158774EA75342A68F /* HTTPTypes in Frameworks */ = {isa = PBXBuildFile; productRef = 658CF1B02FD19387744D52C7 /* HTTPTypes */; };
 		7C57931C145CDBC747D879C2 /* HummingbirdTesting in Frameworks */ = {isa = PBXBuildFile; productRef = 297977BA3BA065055D49D07B /* HummingbirdTesting */; };
@@ -32,6 +34,7 @@
 		9082561D9ACF7E3A8B502842 /* NIOCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8F5F271EDA64C1B08EFE345F /* NIOCore */; };
 		9A120C3E23F84BC21ADC21C5 /* KotaiIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 209F4F1866BE4CA484DED4FB /* KotaiIcon.png */; };
 		9A389D4FE0B208AE9667A578 /* KotaiLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704305B8E8C5F61C3FFC177F /* KotaiLogger.swift */; };
+		A00B06CCD1A126892C5ADAB6 /* NativeEditingCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF1880E039C556A185C392E2 /* NativeEditingCommands.swift */; };
 		A612D4132823FC35F899F459 /* WindowPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */; };
 		B3F9E9F31F804300AD9948CC /* NIOHTTPTypesHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = 0BF8F9EC5F585B6BDE6A3108 /* NIOHTTPTypesHTTP1 */; };
 		B65669C60CB1727CCBDE3F6B /* SecureStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 807102C971665B3FF885D415 /* SecureStoreTests.swift */; };
@@ -73,17 +76,20 @@
 		8225133F174F76814E117CC9 /* SecureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureStore.swift; sourceTree = "<group>"; };
 		825302CD8F058012CA2DBE80 /* AppController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppController.swift; sourceTree = "<group>"; };
 		8C281B681D5ADC13818F570D /* KotaiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KotaiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9204A40E239CF2E7830C0ABD /* StaticURLPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticURLPrompt.swift; sourceTree = "<group>"; };
 		93A6B0C5196695A46D721EA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTitleSetter.swift; sourceTree = "<group>"; };
 		AE70C569EE2A0B32C553C4F5 /* CopyButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyButton.swift; sourceTree = "<group>"; };
 		B1B535F95E38213C933FDE90 /* Kotai.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Kotai.icns; sourceTree = "<group>"; };
 		C4BF1750A9A7F5AB59887638 /* SetupWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupWizardView.swift; sourceTree = "<group>"; };
 		CC19527FEE5DE169CFB5E405 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		CFE4CB6480214E9F122C9AB5 /* RevealableSecureField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevealableSecureField.swift; sourceTree = "<group>"; };
 		D1466CD2DA8612C82AC292AF /* ProxyConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyConfigurationTests.swift; sourceTree = "<group>"; };
 		D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPresentation.swift; sourceTree = "<group>"; };
 		D99EB0992FF1958EC2E23FB5 /* NgrokStaticURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NgrokStaticURLTests.swift; sourceTree = "<group>"; };
 		E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
 		E64F440FC8B3881754594CA6 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		EF1880E039C556A185C392E2 /* NativeEditingCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeEditingCommands.swift; sourceTree = "<group>"; };
 		F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterProxy.swift; sourceTree = "<group>"; };
 		FC116EBFFDB4C0EE879AA4D0 /* KotaiIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KotaiIcon.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -151,12 +157,15 @@
 				FC116EBFFDB4C0EE879AA4D0 /* KotaiIcon.swift */,
 				704305B8E8C5F61C3FFC177F /* KotaiLogger.swift */,
 				196E30AEC591A52F38C65137 /* ModelRoutingGuide.swift */,
+				EF1880E039C556A185C392E2 /* NativeEditingCommands.swift */,
 				4F31FCE02D24946AD7CF1152 /* NgrokManager.swift */,
 				F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */,
 				6DDCF1DA7CB59A58DE9EEB8A /* ProxyConfiguration.swift */,
+				CFE4CB6480214E9F122C9AB5 /* RevealableSecureField.swift */,
 				8225133F174F76814E117CC9 /* SecureStore.swift */,
 				CC19527FEE5DE169CFB5E405 /* SettingsView.swift */,
 				C4BF1750A9A7F5AB59887638 /* SetupWizardView.swift */,
+				9204A40E239CF2E7830C0ABD /* StaticURLPrompt.swift */,
 				423E121FECE5E76EA29353FA /* StaticURLSelection.swift */,
 				D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */,
 				A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */,
@@ -320,12 +329,15 @@
 				4C277BC1773FE0869759E4CE /* KotaiIcon.swift in Sources */,
 				9A389D4FE0B208AE9667A578 /* KotaiLogger.swift in Sources */,
 				6644632C40031DF3D239117A /* ModelRoutingGuide.swift in Sources */,
+				A00B06CCD1A126892C5ADAB6 /* NativeEditingCommands.swift in Sources */,
 				EF5725B0288E5D0EA9EEA803 /* NgrokManager.swift in Sources */,
 				415586939DD6DB06796A741C /* OpenRouterProxy.swift in Sources */,
 				7DF8CEF51B61407CB430844C /* ProxyConfiguration.swift in Sources */,
+				69D3F8227FCAA32642995B38 /* RevealableSecureField.swift in Sources */,
 				71B1ED5F45BFD5AAF1DA56D7 /* SecureStore.swift in Sources */,
 				D581CE795EBD760908DF2FA0 /* SettingsView.swift in Sources */,
 				299DAA3F0D0D515F9FAC3C22 /* SetupWizardView.swift in Sources */,
+				7902CEB090EBDE11F52078E1 /* StaticURLPrompt.swift in Sources */,
 				F8DB5B101EA076EBBF221DDF /* StaticURLSelection.swift in Sources */,
 				A612D4132823FC35F899F459 /* WindowPresentation.swift in Sources */,
 				4E325A959BD2A91458D23CF2 /* WindowTitleSetter.swift in Sources */,

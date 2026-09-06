@@ -11,6 +11,9 @@ struct KotaiApp: App {
         } label: {
             MenuBarLabel(controller: controller)
         }
+        .commands {
+            NativeEditingCommands()
+        }
 
         Settings {
             if controller.shouldShowSetupWizard {

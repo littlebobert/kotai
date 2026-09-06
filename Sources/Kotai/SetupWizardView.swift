@@ -168,7 +168,7 @@ struct SetupWizardView: View {
                 TextField(
                     "ngrok static domain",
                     text: $ngrokStaticURL,
-                    prompt: Text("https://example.ngrok.app")
+                    prompt: StaticURLPrompt.fieldPrompt
                 )
                 .textFieldStyle(.roundedBorder)
                 underlinedLink(

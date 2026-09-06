@@ -59,11 +59,13 @@ struct SettingsView: View {
 
                     labeledSecureField(
                         "Personal OpenRouter API key",
-                        text: $personalOpenRouterKey
+                        text: $personalOpenRouterKey,
+                        prompt: "Paste your personal OpenRouter API key"
                     )
                     labeledSecureField(
                         "Work OpenRouter API key",
-                        text: $workOpenRouterKey
+                        text: $workOpenRouterKey,
+                        prompt: "Paste your work OpenRouter API key"
                     )
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -94,7 +96,11 @@ struct SettingsView: View {
                         HStack(spacing: 10) {
                             Text("Proxy token")
                                 .frame(width: 110, alignment: .trailing)
-                            SecureField("Proxy token", text: $proxyToken)
+                            RevealableSecureField(
+                                label: "Proxy token",
+                                text: $proxyToken,
+                                prompt: "Paste your proxy token"
+                            )
                         }
 
                         HStack {
@@ -129,14 +135,21 @@ struct SettingsView: View {
         tabContent {
             GroupBox("ngrok connection") {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 10) {
-                        Text("Static dev URL")
-                            .frame(width: 110, alignment: .trailing)
-                        TextField(
-                            "Static dev URL",
-                            text: $ngrokStaticURL,
-                            prompt: Text("https://example.ngrok.app")
-                        )
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 10) {
+                            Text("Static dev URL")
+                                .frame(width: 110, alignment: .trailing)
+                            TextField(
+                                "Static dev URL",
+                                text: $ngrokStaticURL,
+                                prompt: StaticURLPrompt.fieldPrompt
+                            )
+                        }
+
+                        StaticURLPrompt.example
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .padding(.leading, 120)
                     }
 
                     Text("Kotai uses the same static dev URL on every launch.")
@@ -214,12 +227,17 @@ struct SettingsView: View {
 
     private func labeledSecureField(
         _ label: LocalizedStringKey,
-        text: Binding<String>
+        text: Binding<String>,
+        prompt: LocalizedStringKey
     ) -> some View {
         HStack(spacing: 10) {
             Text(label)
                 .frame(width: 190, alignment: .trailing)
-            SecureField(label, text: text)
+            RevealableSecureField(
+                label: label,
+                text: text,
+                prompt: prompt
+            )
         }
     }
 
