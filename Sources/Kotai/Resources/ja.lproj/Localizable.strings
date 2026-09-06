@@ -110,3 +110,9 @@
 "Work model" = "仕事用モデル";
 "Work OpenRouter API key" = "仕事用OpenRouter APIキー";
 "Work" = "仕事用";
+"Configured" = "設定済み";
+"Done" = "完了";
+"Edit" = "編集";
+"Enter a valid HTTPS URL without a path, query, or fragment." = "パス、クエリ、フラグメントを含まない有効なHTTPS URLを入力してください。";
+"Restart ngrok" = "ngrokを再起動";
+"Saved" = "保存済み";

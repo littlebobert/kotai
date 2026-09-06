@@ -110,3 +110,9 @@
 "Work model" = "Work model";
 "Work OpenRouter API key" = "Work OpenRouter API key";
 "Work" = "Work";
+"Configured" = "Configured";
+"Done" = "Done";
+"Edit" = "Edit";
+"Enter a valid HTTPS URL without a path, query, or fragment." = "Enter a valid HTTPS URL without a path, query, or fragment.";
+"Restart ngrok" = "Restart ngrok";
+"Saved" = "Saved";

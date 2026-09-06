@@ -167,84 +167,67 @@ struct NgrokStaticURLTests {
     }
 
     @Test @MainActor
-    func runningRuntimeWithSameURLDoesNotRestart() {
-        #expect(!AppController.shouldRestartNgrok(
-            staticURLChanged: false,
+    func sameCanonicalURLDoesNotEnableRestartWhileRunning() {
+        let draft = SettingsConnectionDraft(
+            rawValue: " HTTPS://EXAMPLE.NGROK.APP/ ",
+            confirmedURL: URL(string: "https://example.ngrok.app"),
             runtimeStatus: .running,
             hasCompleteCredentials: true
-        ))
+        )
+
+        #expect(!draft.isCanonicalURLChanged)
+        #expect(!draft.canRestartNgrok)
     }
 
     @Test @MainActor
-    func runningRuntimeWithChangedURLRestarts() {
-        #expect(AppController.shouldRestartNgrok(
-            staticURLChanged: true,
+    func changedCanonicalURLEnablesRestart() {
+        let draft = SettingsConnectionDraft(
+            rawValue: "https://new.ngrok.app",
+            confirmedURL: URL(string: "https://old.ngrok.app"),
             runtimeStatus: .running,
             hasCompleteCredentials: true
-        ))
+        )
+
+        #expect(draft.isCanonicalURLChanged)
+        #expect(draft.canRestartNgrok)
     }
 
     @Test @MainActor
-    func failedRuntimeWithCompleteCredentialsRestarts() {
-        #expect(AppController.shouldRestartNgrok(
-            staticURLChanged: false,
+    func stoppedRuntimeWithConfiguredURLEnablesRestart() {
+        let draft = SettingsConnectionDraft(
+            rawValue: "https://example.ngrok.app",
+            confirmedURL: URL(string: "https://example.ngrok.app"),
             runtimeStatus: .failed("Unavailable"),
             hasCompleteCredentials: true
-        ))
+        )
+
+        #expect(draft.canRestartNgrok)
     }
 
     @Test @MainActor
-    func failedRuntimeWithIncompleteCredentialsDoesNotRestart() {
-        #expect(!AppController.shouldRestartNgrok(
-            staticURLChanged: false,
+    func invalidDraftShowsValidationAndDisablesRestart() {
+        let draft = SettingsConnectionDraft(
+            rawValue: "http://example.ngrok.app/path",
+            confirmedURL: URL(string: "https://example.ngrok.app"),
             runtimeStatus: .failed("Unavailable"),
-            hasCompleteCredentials: false
-        ))
-    }
-
-    @Test @MainActor
-    func needsConfigurationRuntimeWithCompleteCredentialsRestarts() {
-        #expect(AppController.shouldRestartNgrok(
-            staticURLChanged: false,
-            runtimeStatus: .needsConfiguration,
             hasCompleteCredentials: true
-        ))
+        )
+
+        #expect(draft.normalizedURL == nil)
+        #expect(draft.validationError != nil)
+        #expect(!draft.canRestartNgrok)
     }
 
     @Test @MainActor
-    func needsConfigurationRuntimeWithIncompleteCredentialsDoesNotRestart() {
-        #expect(!AppController.shouldRestartNgrok(
-            staticURLChanged: false,
-            runtimeStatus: .needsConfiguration,
+    func incompleteCredentialsDisableRestart() {
+        let draft = SettingsConnectionDraft(
+            rawValue: "https://new.ngrok.app",
+            confirmedURL: URL(string: "https://old.ngrok.app"),
+            runtimeStatus: .running,
             hasCompleteCredentials: false
-        ))
+        )
+
+        #expect(!draft.canRestartNgrok)
     }
 
-    @Test @MainActor
-    func startingRuntimeWithCompleteCredentialsRestarts() {
-        #expect(AppController.shouldRestartNgrok(
-            staticURLChanged: false,
-            runtimeStatus: .starting,
-            hasCompleteCredentials: true
-        ))
-    }
-
-    @Test @MainActor
-    func startingRuntimeWithIncompleteCredentialsDoesNotRestart() {
-        #expect(!AppController.shouldRestartNgrok(
-            staticURLChanged: false,
-            runtimeStatus: .starting,
-            hasCompleteCredentials: false
-        ))
-    }
-
-    @Test @MainActor
-    func canonicallyEquivalentStaticURLIsUnchanged() throws {
-        let proposedURL = try NgrokStaticURL("HTTPS://X/")
-
-        #expect(!AppController.hasStaticURLChanged(
-            proposedURL: proposedURL,
-            confirmedValue: "https://x"
-        ))
-    }
 }

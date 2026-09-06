@@ -110,7 +110,7 @@ final class AppController {
         workOpenRouterKey: String,
         proxyToken: String
     ) async throws {
-        KotaiLogger.shared.info("Saving credentials")
+        KotaiLogger.shared.info("Saving setup credentials")
         try await configuration.setCredentials([
             .personalOpenRouterKey: personalOpenRouterKey.trimmingCharacters(
                 in: .whitespacesAndNewlines
@@ -122,98 +122,62 @@ final class AppController {
                 in: .whitespacesAndNewlines
             ),
         ])
-        await refreshRuntime()
     }
 
-    struct SettingsSaveResult: Equatable {
-        let normalizedStaticURL: URL
-        let didRestartNgrok: Bool
+    func updateCredential(
+        _ credential: ProxyConfiguration.Credential,
+        value: String
+    ) async throws -> String {
+        let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        try await configuration.setCredential(normalizedValue, for: credential)
+        return normalizedValue
     }
 
-    static func hasStaticURLChanged(
-        proposedURL: NgrokStaticURL,
-        confirmedValue: String?
-    ) -> Bool {
-        guard
-            let confirmedValue,
-            let confirmedURL = try? NgrokStaticURL(confirmedValue)
-        else {
-            return true
-        }
-        return confirmedURL != proposedURL
+    func regenerateAndPersistProxyToken() async throws -> String {
+        let proxyToken = generateProxyToken()
+        try await configuration.setCredential(proxyToken, for: .proxyToken)
+        return proxyToken
     }
 
-    static func shouldRestartNgrok(
-        staticURLChanged: Bool,
-        runtimeStatus: RuntimeStatus,
-        hasCompleteCredentials: Bool
-    ) -> Bool {
-        if staticURLChanged {
-            return true
-        }
-        guard hasCompleteCredentials else {
-            return false
-        }
-
-        switch runtimeStatus {
-        case .needsConfiguration, .failed:
-            return true
-        case .starting:
-            return true
-        case .running:
-            return false
-        }
-    }
-
-    func saveSettings(
-        personalOpenRouterKey: String,
-        workOpenRouterKey: String,
-        proxyToken: String,
-        staticURL: String
-    ) async throws -> SettingsSaveResult {
-        KotaiLogger.shared.info("Saving settings")
-        let normalizedStaticURL = try NgrokStaticURL(staticURL)
-        let confirmedStaticURLValue = try await configuration.credential(
-            .ngrokStaticURL
-        )
-        let normalizedCredentials: [ProxyConfiguration.Credential: String] = [
-            .personalOpenRouterKey: personalOpenRouterKey.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ),
-            .workOpenRouterKey: workOpenRouterKey.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ),
-            .proxyToken: proxyToken.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ),
-            .ngrokStaticURL: normalizedStaticURL.absoluteString,
+    func hasCompleteSettingsCredentials() async throws -> Bool {
+        let requiredCredentials = try await [
+            configuration.credential(.ngrokAuthtoken),
+            configuration.credential(.personalOpenRouterKey),
+            configuration.credential(.workOpenRouterKey),
+            configuration.credential(.proxyToken),
         ]
-        let ngrokAuthtoken = try await configuration.credential(
-            .ngrokAuthtoken
-        ) ?? ""
-        let hasCompleteCredentials = !ngrokAuthtoken.isEmpty
-            && normalizedCredentials.values.allSatisfy { !$0.isEmpty }
-        let shouldRestart = Self.shouldRestartNgrok(
-            staticURLChanged: Self.hasStaticURLChanged(
-                proposedURL: normalizedStaticURL,
-                confirmedValue: confirmedStaticURLValue
-            ),
-            runtimeStatus: runtimeStatus,
-            hasCompleteCredentials: hasCompleteCredentials
-        )
+        return requiredCredentials.allSatisfy { !($0 ?? "").isEmpty }
+    }
 
-        try await configuration.setCredentials(normalizedCredentials)
-        UserDefaults.standard.set(
-            normalizedStaticURL.absoluteString,
-            forKey: "ngrok-public-url"
-        )
-        if shouldRestart {
-            await refreshRuntime()
+    func restartWithStaticURL(_ staticURL: String) async throws -> URL {
+        let normalizedStaticURL = try NgrokStaticURL(staticURL)
+        guard let ngrokAuthtoken = try await configuration.credential(.ngrokAuthtoken),
+              !ngrokAuthtoken.isEmpty
+        else {
+            throw NgrokError.invalidAuthtoken
         }
-        return SettingsSaveResult(
-            normalizedStaticURL: normalizedStaticURL.url,
-            didRestartNgrok: shouldRestart
-        )
+
+        runtimeStatus = .starting
+        do {
+            let publicURL = try await restartNgrok(
+                authtoken: ngrokAuthtoken,
+                staticURL: normalizedStaticURL.absoluteString,
+                progress: { _ in }
+            )
+            try await configuration.setCredential(
+                normalizedStaticURL.absoluteString,
+                for: .ngrokStaticURL
+            )
+            UserDefaults.standard.set(
+                normalizedStaticURL.absoluteString,
+                forKey: "ngrok-public-url"
+            )
+            runtimeStatus = .running
+            return publicURL
+        } catch {
+            runtimeStatus = .failed(error.localizedDescription)
+            throw error
+        }
     }
 
     func setupNgrok(

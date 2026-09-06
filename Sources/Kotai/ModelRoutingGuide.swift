@@ -23,7 +23,7 @@ struct ModelRoutingGuide: View {
                 )
                 routingPattern(
                     title: "Work model",
-                    value: "kotai/work/anthropic/claude-opus-4.1"
+                    value: "kotai/work/openai/gpt-5.6"
                 )
             }
         }
