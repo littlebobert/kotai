@@ -146,44 +146,101 @@ final class AppController {
         proxyToken: String
     ) async throws {
         KotaiLogger.shared.info("Saving credentials")
-        try await configuration.setCredential(
-            personalOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            for: .personalOpenRouterKey
-        )
-        try await configuration.setCredential(
-            workOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            for: .workOpenRouterKey
-        )
-        try await configuration.setCredential(
-            proxyToken.trimmingCharacters(in: .whitespacesAndNewlines),
-            for: .proxyToken
+        try await configuration.setCredentials([
+            .personalOpenRouterKey: personalOpenRouterKey.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            .workOpenRouterKey: workOpenRouterKey.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            .proxyToken: proxyToken.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+        ])
+        await refreshRuntime()
+    }
+
+    func saveSettings(
+        personalOpenRouterKey: String,
+        workOpenRouterKey: String,
+        proxyToken: String,
+        staticURL: String
+    ) async throws -> URL {
+        KotaiLogger.shared.info("Saving settings")
+        let normalizedStaticURL = try NgrokStaticURL(staticURL)
+        try await configuration.setCredentials([
+            .personalOpenRouterKey: personalOpenRouterKey.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            .workOpenRouterKey: workOpenRouterKey.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            .proxyToken: proxyToken.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            ),
+            .ngrokStaticURL: normalizedStaticURL.absoluteString,
+        ])
+        UserDefaults.standard.set(
+            normalizedStaticURL.absoluteString,
+            forKey: "ngrok-public-url"
         )
         await refreshRuntime()
+        return normalizedStaticURL.url
     }
 
     func setupNgrok(
         authtoken: String,
+        staticURL: String? = nil,
         progress: @MainActor @escaping (NgrokSetupPhase) -> Void
     ) async throws -> (publicURL: URL, proxyToken: String) {
         KotaiLogger.shared.info("ngrok setup started")
+        let normalizedStaticURL = try NgrokStaticURL(
+            staticURL ?? legacyConfiguredPublicURL()?.absoluteString ?? ""
+        )
+        let normalizedAuthtoken = authtoken.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         let proxyToken = try await ensureProxyToken()
         let publicURL = try await restartNgrok(
-            authtoken: authtoken,
+            authtoken: normalizedAuthtoken,
+            staticURL: normalizedStaticURL.absoluteString,
             progress: progress
         )
-        try await configuration.setCredential(
-            authtoken.trimmingCharacters(in: .whitespacesAndNewlines),
-            for: .ngrokAuthtoken
+        try await configuration.setCredentials([
+            .ngrokAuthtoken: normalizedAuthtoken,
+            .ngrokStaticURL: normalizedStaticURL.absoluteString,
+        ])
+        UserDefaults.standard.set(
+            normalizedStaticURL.absoluteString,
+            forKey: "ngrok-public-url"
         )
         KotaiLogger.shared.info(
-            "ngrok setup completed; host=\(publicURL.host ?? "unknown")"
+            "ngrok setup completed; host=\(normalizedStaticURL.host)"
         )
         return (publicURL, proxyToken)
     }
 
+    func configuredStaticURL() async throws -> URL? {
+        if let storedStaticURL = try await configuration.credential(.ngrokStaticURL),
+           let normalizedStaticURL = try? NgrokStaticURL(storedStaticURL)
+        {
+            return normalizedStaticURL.url
+        }
+        return legacyConfiguredPublicURL()
+    }
+
     func configuredPublicURL() -> URL? {
-        UserDefaults.standard.string(forKey: "ngrok-public-url")
-            .flatMap(URL.init(string:))
+        legacyConfiguredPublicURL()
+    }
+
+    private func legacyConfiguredPublicURL() -> URL? {
+        guard
+            let storedURL = UserDefaults.standard.string(forKey: "ngrok-public-url"),
+            let normalizedStaticURL = try? NgrokStaticURL(storedURL)
+        else {
+            return nil
+        }
+        return normalizedStaticURL.url
     }
 
     func generateProxyToken() -> String {
@@ -273,6 +330,7 @@ final class AppController {
         do {
             let requiredCredentials = try await [
                 configuration.credential(.ngrokAuthtoken),
+                configuration.credential(.ngrokStaticURL),
                 configuration.credential(.personalOpenRouterKey),
                 configuration.credential(.workOpenRouterKey),
                 configuration.credential(.proxyToken),
@@ -287,7 +345,10 @@ final class AppController {
                 return
             }
 
-            guard let ngrokAuthtoken = requiredCredentials[0] else {
+            guard
+                let ngrokAuthtoken = requiredCredentials[0],
+                let ngrokStaticURL = requiredCredentials[1]
+            else {
                 isSetupRequired = true
                 runtimeStatus = .needsConfiguration
                 return
@@ -297,6 +358,7 @@ final class AppController {
             runtimeStatus = .starting
             _ = try await restartNgrok(
                 authtoken: ngrokAuthtoken,
+                staticURL: ngrokStaticURL,
                 progress: { _ in }
             )
             runtimeStatus = .running
@@ -311,6 +373,7 @@ final class AppController {
 
     private func restartNgrok(
         authtoken: String,
+        staticURL: String,
         progress: @MainActor @escaping (NgrokSetupPhase) -> Void
     ) async throws -> URL {
         KotaiLogger.shared.info("Restarting ngrok")
@@ -319,6 +382,7 @@ final class AppController {
 
         let endpoint = try await ngrokManager.start(
             authtoken: authtoken,
+            staticURL: staticURL,
             progress: progress
         )
         endpoint.process.terminationHandler = { [weak self] process in

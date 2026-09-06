@@ -22,7 +22,6 @@
 "Diagnostics…" = "Diagnostics…";
 "Discovering your static ngrok URL…" = "Discovering your static ngrok URL…";
 "Email justin.garcia@gmail.com and attach the Kotai log files." = "Email justin.garcia@gmail.com and attach the Kotai log files.";
-"Every free ngrok account includes a stable dev domain. Kotai starts the agent and discovers that URL automatically." = "Every free ngrok account includes a stable dev domain. Kotai starts the agent and discovers that URL automatically.";
 "Finish" = "Finish";
 "For Cursor, copy this token and paste it into the OpenAI API Key secret field." = "For Cursor, copy this token and paste it into the OpenAI API Key secret field.";
 "Generic OpenRouter-compatible base URL" = "Generic OpenRouter-compatible base URL";
@@ -83,3 +82,10 @@
 "Personal model prefix" = "Personal model prefix";
 "Use personal and work projects at the same time. Prefix any model ID with one of these patterns; Kotai removes the prefix before sending to OpenRouter. Unprefixed model IDs use the menu-bar default." = "Use personal and work projects at the same time. Prefix any model ID with one of these patterns; Kotai removes the prefix before sending to OpenRouter. Unprefixed model IDs use the menu-bar default.";
 "Work model prefix" = "Work model prefix";
+"Enter a valid HTTPS ngrok static URL without a path, query, or fragment." = "Enter a valid HTTPS ngrok static URL without a path, query, or fragment.";
+"Find your assigned URL in the ngrok Domains dashboard." = "Find your assigned URL in the ngrok Domains dashboard.";
+"Kotai uses the same static dev URL on every launch." = "Kotai uses the same static dev URL on every launch.";
+"Open ngrok Domains" = "Open ngrok Domains";
+"Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch." = "Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch.";
+"Static dev URL" = "Static dev URL";
+"ngrok started with a different endpoint than the configured static URL." = "ngrok started with a different endpoint than the configured static URL.";

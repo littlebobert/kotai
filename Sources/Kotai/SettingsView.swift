@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var personalOpenRouterKey = ""
     @State private var workOpenRouterKey = ""
     @State private var proxyToken = ""
+    @State private var ngrokStaticURL = ""
     @State private var ngrokPublicURL: URL?
     @State private var errorMessage: String?
     @State private var isLoading = true
@@ -67,18 +68,21 @@ struct SettingsView: View {
             }
 
             Section("ngrok") {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Public URL")
-                    Text(
-                        ngrokPublicURL?.absoluteString
-                            ?? String(localized: "Not configured")
-                    )
-                    .font(.callout)
+                TextField(
+                    "Static dev URL",
+                    text: $ngrokStaticURL,
+                    prompt: Text("https://example.ngrok.app")
+                )
+
+                Text("Kotai uses the same static dev URL on every launch.")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .textSelection(.enabled)
-                }
+
+                Link(
+                    "Open ngrok Domains",
+                    destination: URL(string: "https://dashboard.ngrok.com/domains")!
+                )
+
                 HStack {
                     Button("Copy Cursor URL") {
                         copyBaseURL(appendingPath: "cursor/v1")
@@ -128,11 +132,13 @@ struct SettingsView: View {
             )
             async let workKey = controller.loadCredential(.workOpenRouterKey)
             async let storedProxyToken = controller.loadCredential(.proxyToken)
+            async let storedStaticURL = controller.configuredStaticURL()
 
             personalOpenRouterKey = try await personalKey
             workOpenRouterKey = try await workKey
             proxyToken = try await storedProxyToken
-            ngrokPublicURL = controller.configuredPublicURL()
+            ngrokPublicURL = try await storedStaticURL
+            ngrokStaticURL = ngrokPublicURL?.absoluteString ?? ""
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -158,11 +164,14 @@ struct SettingsView: View {
             defer { isSaving = false }
 
             do {
-                try await controller.saveCredentials(
+                let normalizedStaticURL = try await controller.saveSettings(
                     personalOpenRouterKey: personalOpenRouterKey,
                     workOpenRouterKey: workOpenRouterKey,
-                    proxyToken: proxyToken
+                    proxyToken: proxyToken,
+                    staticURL: ngrokStaticURL
                 )
+                ngrokPublicURL = normalizedStaticURL
+                ngrokStaticURL = normalizedStaticURL.absoluteString
             } catch {
                 errorMessage = error.localizedDescription
             }

@@ -22,7 +22,6 @@
 "Diagnostics…" = "診断…";
 "Discovering your static ngrok URL…" = "固定ngrok URLを検出しています…";
 "Email justin.garcia@gmail.com and attach the Kotai log files." = "justin.garcia@gmail.com 宛てにメールを送り、Kotaiのログファイルを添付してください。";
-"Every free ngrok account includes a stable dev domain. Kotai starts the agent and discovers that URL automatically." = "無料のngrokアカウントには固定の開発ドメインが含まれます。Kotaiがエージェントを起動し、そのURLを自動的に検出します。";
 "Finish" = "完了";
 "For Cursor, copy this token and paste it into the OpenAI API Key secret field." = "Cursorでは、このトークンをコピーしてOpenAI API Keyのシークレット欄に貼り付けてください。";
 "Generic OpenRouter-compatible base URL" = "汎用OpenRouter互換ベースURL";
@@ -83,3 +82,10 @@
 "Personal model prefix" = "個人用モデルの接頭辞";
 "Use personal and work projects at the same time. Prefix any model ID with one of these patterns; Kotai removes the prefix before sending to OpenRouter. Unprefixed model IDs use the menu-bar default." = "個人用と仕事用のプロジェクトを同時に利用できます。モデルIDの先頭に次のいずれかの接頭辞を付けてください。KotaiはOpenRouterへ送信する前に接頭辞を取り除きます。接頭辞のないモデルIDには、メニューバーのデフォルトが使用されます。";
 "Work model prefix" = "仕事用モデルの接頭辞";
+"Enter a valid HTTPS ngrok static URL without a path, query, or fragment." = "パス、クエリ、フラグメントを含まない有効なHTTPSのngrok固定開発URLを入力してください。";
+"Find your assigned URL in the ngrok Domains dashboard." = "割り当てられたURLはngrokのDomainsダッシュボードで確認できます。";
+"Kotai uses the same static dev URL on every launch." = "Kotaiは起動するたびに同じ固定開発URLを使用します。";
+"Open ngrok Domains" = "ngrok Domainsを開く";
+"Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch." = "authtokenと割り当てられた固定開発URLの両方を貼り付けてください。Kotaiは起動するたびにこのURLを再利用します。";
+"Static dev URL" = "固定開発URL";
+"ngrok started with a different endpoint than the configured static URL." = "ngrokが設定した固定開発URLとは異なるエンドポイントで起動しました。";

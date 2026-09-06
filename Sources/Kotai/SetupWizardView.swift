@@ -26,6 +26,7 @@ struct SetupWizardView: View {
     @State private var workOpenRouterKey = ""
     @State private var proxyToken = ""
     @State private var ngrokAuthtoken = ""
+    @State private var ngrokStaticURL = ""
     @State private var ngrokPublicURL: URL?
     @State private var ngrokSetupPhase: NgrokSetupPhase?
     @State private var errorMessage: String?
@@ -124,16 +125,33 @@ struct SetupWizardView: View {
         VStack(alignment: .leading, spacing: 16) {
             stepTitle(
                 "Connect your ngrok account",
-                detail: "Every free ngrok account includes a stable dev domain. Kotai starts the agent and discovers that URL automatically."
+                detail: "Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch."
             )
 
             SecureField("ngrok authtoken", text: $ngrokAuthtoken)
                 .textFieldStyle(.roundedBorder)
 
-            Link(
-                "Get your ngrok authtoken",
-                destination: URL(string: "https://dashboard.ngrok.com/get-started/your-authtoken")!
+            TextField(
+                "Static dev URL",
+                text: $ngrokStaticURL,
+                prompt: Text("https://example.ngrok.app")
             )
+            .textFieldStyle(.roundedBorder)
+
+            Text("Find your assigned URL in the ngrok Domains dashboard.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 16) {
+                Link(
+                    "Get your ngrok authtoken",
+                    destination: URL(string: "https://dashboard.ngrok.com/get-started/your-authtoken")!
+                )
+                Link(
+                    "Open ngrok Domains",
+                    destination: URL(string: "https://dashboard.ngrok.com/domains")!
+                )
+            }
 
             Button {
                 setupNgrok()
@@ -154,6 +172,9 @@ struct SetupWizardView: View {
             .disabled(
                 isSaving
                     || ngrokAuthtoken
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .isEmpty
+                    || ngrokStaticURL
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                         .isEmpty
             )
@@ -304,12 +325,13 @@ struct SetupWizardView: View {
             async let workKey = controller.loadCredential(.workOpenRouterKey)
             async let storedProxyToken = controller.loadCredential(.proxyToken)
             async let storedNgrokAuthtoken = controller.loadCredential(.ngrokAuthtoken)
+            async let storedStaticURL = controller.configuredStaticURL()
 
             personalOpenRouterKey = try await personalKey
             workOpenRouterKey = try await workKey
             proxyToken = try await storedProxyToken
             ngrokAuthtoken = try await storedNgrokAuthtoken
-            ngrokPublicURL = controller.configuredPublicURL()
+            ngrokStaticURL = try await storedStaticURL?.absoluteString ?? ""
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -367,11 +389,13 @@ struct SetupWizardView: View {
 
             do {
                 let setupResult = try await controller.setupNgrok(
-                    authtoken: ngrokAuthtoken
+                    authtoken: ngrokAuthtoken,
+                    staticURL: ngrokStaticURL
                 ) { phase in
                     ngrokSetupPhase = phase
                 }
                 ngrokPublicURL = setupResult.publicURL
+                ngrokStaticURL = setupResult.publicURL.absoluteString
                 proxyToken = setupResult.proxyToken
             } catch {
                 ngrokPublicURL = nil

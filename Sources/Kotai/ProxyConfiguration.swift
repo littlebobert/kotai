@@ -3,6 +3,7 @@ import Foundation
 actor ProxyConfiguration {
     enum Credential: String, CaseIterable {
         case ngrokAuthtoken = "ngrok-authtoken"
+        case ngrokStaticURL = "ngrok-static-url"
         case personalOpenRouterKey = "personal-openrouter-key"
         case proxyToken = "proxy-token"
         case workOpenRouterKey = "work-openrouter-key"
@@ -38,9 +39,15 @@ actor ProxyConfiguration {
     }
 
     func setCredential(_ value: String, for credential: Credential) throws {
-        KotaiLogger.shared.registerSensitiveValue(value)
+        try setCredentials([credential: value])
+    }
+
+    func setCredentials(_ updatedCredentials: [Credential: String]) throws {
+        for value in updatedCredentials.values {
+            KotaiLogger.shared.registerSensitiveValue(value)
+        }
         var credentials = try loadCredentialVault()
-        credentials[credential] = value
+        credentials.merge(updatedCredentials) { _, newValue in newValue }
         try saveCredentialVault(credentials)
         credentialCache = credentials
     }
