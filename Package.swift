@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "Kotai",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14),
     ],
@@ -31,7 +32,8 @@ let package = Package(
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "NIOHTTPTypesHTTP1", package: "swift-nio-extras"),
-            ]
+            ],
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "KotaiTests",

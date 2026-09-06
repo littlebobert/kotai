@@ -2,11 +2,15 @@ import AsyncHTTPClient
 import Foundation
 import Hummingbird
 import HTTPTypes
+import NIOCore
 import NIOHTTP1
 import NIOHTTPTypesHTTP1
 
 struct OpenRouterProxy: HTTPResponder {
     typealias Context = BasicRequestContext
+
+    private static let maximumRequestBodySize = 16 * 1024 * 1024
+    private static let upstreamTimeout = TimeAmount.seconds(90)
 
     private let configuration: ProxyConfiguration
     private let httpClient: HTTPClient
@@ -27,10 +31,21 @@ struct OpenRouterProxy: HTTPResponder {
             )
         }
 
+        let requestID = String(UUID().uuidString.prefix(8))
+        let startedAt = Date()
+        KotaiLogger.shared.info(
+            "Proxy \(requestID) received; method=\(request.method.rawValue) " +
+                "path=\(request.uri.path) " +
+                "contentLength=\(request.headers[.contentLength] ?? "unknown")"
+        )
+
         guard let upstreamURL = OpenRouterRoute.upstreamURL(
             path: request.uri.path,
             query: request.uri.query
         ) else {
+            KotaiLogger.shared.warning(
+                "Proxy \(requestID) rejected unknown route"
+            )
             return jsonResponse(
                 status: .notFound,
                 object: ["error": "Not found"]
@@ -47,6 +62,9 @@ struct OpenRouterProxy: HTTPResponder {
                 expectedToken
             )
         else {
+            KotaiLogger.shared.warning(
+                "Proxy \(requestID) rejected client authentication"
+            )
             return jsonResponse(
                 status: .unauthorized,
                 object: ["error": "Unauthorized"]
@@ -57,23 +75,52 @@ struct OpenRouterProxy: HTTPResponder {
             let openRouterKey = try await configuration.activeOpenRouterKey(),
             !openRouterKey.isEmpty
         else {
+            KotaiLogger.shared.error(
+                "Proxy \(requestID) has no active OpenRouter key"
+            )
             return jsonResponse(
                 status: .serviceUnavailable,
                 object: ["error": "The active OpenRouter key is not configured"]
             )
         }
 
-        return try await forward(
-            request,
-            openRouterKey: openRouterKey,
-            upstreamURL: upstreamURL
-        )
+        do {
+            return try await forward(
+                request,
+                openRouterKey: openRouterKey,
+                upstreamURL: upstreamURL,
+                requestID: requestID,
+                startedAt: startedAt
+            )
+        } catch is CancellationError {
+            KotaiLogger.shared.warning(
+                "Proxy \(requestID) cancelled after " +
+                    "\(elapsedSeconds(since: startedAt))s"
+            )
+            throw CancellationError()
+        } catch {
+            let errorDescription = String(describing: error)
+            KotaiLogger.shared.error(
+                "Proxy \(requestID) failed after " +
+                    "\(elapsedSeconds(since: startedAt))s: " +
+                    errorDescription
+            )
+            return jsonResponse(
+                status: .badGateway,
+                object: [
+                    "error": "Kotai could not reach OpenRouter",
+                    "detail": errorDescription,
+                ]
+            )
+        }
     }
 
     private func forward(
         _ request: Request,
         openRouterKey: String,
-        upstreamURL: URL
+        upstreamURL: URL,
+        requestID: String,
+        startedAt: Date
     ) async throws -> Response {
         var upstreamRequest = HTTPClientRequest(
             url: upstreamURL.absoluteString
@@ -87,16 +134,32 @@ struct OpenRouterProxy: HTTPResponder {
         removeHopByHopHeaders(from: &upstreamRequest.headers)
 
         if request.method != .get && request.method != .head {
-            let bodyLength = request.headers[.contentLength]
-                .flatMap(Int64.init)
-                .map(HTTPClientRequest.Body.Length.known)
-                ?? .unknown
-            upstreamRequest.body = .stream(request.body, length: bodyLength)
+            let body = try await request.body.collect(
+                upTo: Self.maximumRequestBodySize
+            )
+            upstreamRequest.body = .bytes(body)
+            KotaiLogger.shared.debug(
+                "Proxy \(requestID) buffered \(body.readableBytes) request bytes"
+            )
+            if let summary = completionRequestSummary(body) {
+                KotaiLogger.shared.info(
+                    "Proxy \(requestID) payload; \(summary)"
+                )
+            }
         }
 
+        KotaiLogger.shared.info(
+            "Proxy \(requestID) forwarding to " +
+                "\(upstreamURL.host ?? "unknown")\(upstreamURL.path)"
+        )
         let upstreamResponse = try await httpClient.execute(
             upstreamRequest,
-            deadline: .distantFuture
+            deadline: .now() + Self.upstreamTimeout
+        )
+        KotaiLogger.shared.info(
+            "Proxy \(requestID) received upstream status " +
+                "\(upstreamResponse.status.code) after " +
+                "\(elapsedSeconds(since: startedAt))s"
         )
         var responseHeaders = HTTPFields(
             upstreamResponse.headers,
@@ -113,6 +176,25 @@ struct OpenRouterProxy: HTTPResponder {
             body: ResponseBody(asyncSequence: upstreamResponse.body)
         )
     }
+}
+
+private func elapsedSeconds(since date: Date) -> String {
+    String(format: "%.3f", Date().timeIntervalSince(date))
+}
+
+private func completionRequestSummary(_ buffer: ByteBuffer) -> String? {
+    let data = Data(buffer.readableBytesView)
+    guard
+        let object = try? JSONSerialization.jsonObject(with: data)
+            as? [String: Any]
+    else {
+        return nil
+    }
+
+    let model = object["model"] as? String ?? "unknown"
+    let messageCount = (object["messages"] as? [Any])?.count ?? 0
+    let toolCount = (object["tools"] as? [Any])?.count ?? 0
+    return "model=\(model) messages=\(messageCount) tools=\(toolCount)"
 }
 
 enum OpenRouterRoute {

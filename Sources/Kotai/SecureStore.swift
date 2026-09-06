@@ -80,4 +80,17 @@ struct SecureStore: Sendable {
             throw SecureStoreError.unexpectedStatus(updateStatus)
         }
     }
+
+    func delete(account: String) throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+        ]
+        let status = SecItemDelete(query as CFDictionary)
+
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw SecureStoreError.unexpectedStatus(status)
+        }
+    }
 }

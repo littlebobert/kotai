@@ -2,6 +2,7 @@ import AppKit
 import AsyncHTTPClient
 import Foundation
 import Hummingbird
+import NIOPosix
 import Observation
 
 @MainActor
@@ -16,13 +17,13 @@ final class AppController {
         var displayName: String {
             switch self {
             case .needsConfiguration:
-                "Setup required"
+                String(localized: "Setup required")
             case .starting:
-                "Starting"
+                String(localized: "Starting")
             case .running:
-                "Connected"
+                String(localized: "Connected")
             case .failed:
-                "Connection failed"
+                String(localized: "Connection failed")
             }
         }
 
@@ -61,7 +62,16 @@ final class AppController {
 
         self.accountMode = storedMode
         self.configuration = configuration
-        self.httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
+        var httpClientConfiguration = HTTPClient.Configuration()
+        httpClientConfiguration.httpVersion = .http1Only
+        self.httpClient = HTTPClient(
+            eventLoopGroup: MultiThreadedEventLoopGroup.singleton,
+            configuration: httpClientConfiguration
+        )
+        KotaiLogger.shared.info(
+            "App initialized; account=\(storedMode.rawValue); " +
+                "upstreamHTTP=http1; networkBackend=nio-posix"
+        )
     }
 
     var statusDetail: String? {
@@ -72,6 +82,7 @@ final class AppController {
     }
 
     func start() {
+        KotaiLogger.shared.info("App starting")
         startProxy()
         Task {
             await refreshRuntime()
@@ -81,6 +92,9 @@ final class AppController {
     func selectAccountMode(_ accountMode: AccountMode) {
         self.accountMode = accountMode
         UserDefaults.standard.set(accountMode.rawValue, forKey: "account-mode")
+        KotaiLogger.shared.info(
+            "Active account changed to \(accountMode.rawValue)"
+        )
 
         Task {
             await configuration.setAccountMode(accountMode)
@@ -88,6 +102,7 @@ final class AppController {
     }
 
     func beginSetupWizard() {
+        KotaiLogger.shared.info("Setup wizard requested")
         shouldShowSetupWizard = true
     }
 
@@ -106,6 +121,7 @@ final class AppController {
         workOpenRouterKey: String,
         proxyToken: String
     ) async throws {
+        KotaiLogger.shared.info("Saving credentials")
         try await configuration.setCredential(
             personalOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines),
             for: .personalOpenRouterKey
@@ -124,7 +140,9 @@ final class AppController {
     func setupNgrok(
         authtoken: String,
         progress: @MainActor @escaping (NgrokSetupPhase) -> Void
-    ) async throws -> URL {
+    ) async throws -> (publicURL: URL, proxyToken: String) {
+        KotaiLogger.shared.info("ngrok setup started")
+        let proxyToken = try await ensureProxyToken()
         let publicURL = try await restartNgrok(
             authtoken: authtoken,
             progress: progress
@@ -133,7 +151,10 @@ final class AppController {
             authtoken.trimmingCharacters(in: .whitespacesAndNewlines),
             for: .ngrokAuthtoken
         )
-        return publicURL
+        KotaiLogger.shared.info(
+            "ngrok setup completed; host=\(publicURL.host ?? "unknown")"
+        )
+        return (publicURL, proxyToken)
     }
 
     func configuredPublicURL() -> URL? {
@@ -157,7 +178,23 @@ final class AppController {
         return randomBytes.map { String(format: "%02x", $0) }.joined()
     }
 
+    private func ensureProxyToken() async throws -> String {
+        if let existingToken = try await configuration.credential(.proxyToken),
+           !existingToken.isEmpty
+        {
+            return existingToken
+        }
+
+        let proxyToken = generateProxyToken()
+        try await configuration.setCredential(
+            proxyToken,
+            for: .proxyToken
+        )
+        return proxyToken
+    }
+
     func quit() {
+        KotaiLogger.shared.info("App quitting")
         ngrokProcess?.terminate()
         ngrokProcess = nil
         proxyTask?.cancel()
@@ -169,6 +206,9 @@ final class AppController {
         guard proxyTask == nil else {
             return
         }
+        KotaiLogger.shared.info(
+            "Starting local proxy on 127.0.0.1:\(Self.proxyPort)"
+        )
 
         let responder = OpenRouterProxy(
             configuration: configuration,
@@ -186,14 +226,23 @@ final class AppController {
             do {
                 try await application.run()
             } catch is CancellationError {
+                KotaiLogger.shared.info("Local proxy stopped")
                 return
             } catch {
-                runtimeStatus = .failed("Local proxy: \(error.localizedDescription)")
+                KotaiLogger.shared.error(
+                    "Local proxy failed: \(error.localizedDescription)"
+                )
+                runtimeStatus = .failed(
+                    String(
+                        localized: "Local proxy: \(error.localizedDescription)"
+                    )
+                )
             }
         }
     }
 
     private func refreshRuntime() async {
+        KotaiLogger.shared.info("Refreshing runtime")
         ngrokProcess?.terminate()
         ngrokProcess = nil
 
@@ -205,6 +254,9 @@ final class AppController {
                 configuration.credential(.proxyToken),
             ]
             guard requiredCredentials.allSatisfy({ !($0 ?? "").isEmpty }) else {
+                KotaiLogger.shared.warning(
+                    "Runtime needs configuration; one or more credentials are missing"
+                )
                 isSetupRequired = true
                 shouldShowSetupWizard = true
                 runtimeStatus = .needsConfiguration
@@ -224,7 +276,11 @@ final class AppController {
                 progress: { _ in }
             )
             runtimeStatus = .running
+            KotaiLogger.shared.info("Runtime connected")
         } catch {
+            KotaiLogger.shared.error(
+                "Runtime refresh failed: \(error.localizedDescription)"
+            )
             runtimeStatus = .failed(error.localizedDescription)
         }
     }
@@ -233,6 +289,7 @@ final class AppController {
         authtoken: String,
         progress: @MainActor @escaping (NgrokSetupPhase) -> Void
     ) async throws -> URL {
+        KotaiLogger.shared.info("Restarting ngrok")
         ngrokProcess?.terminate()
         ngrokProcess = nil
 
@@ -248,8 +305,13 @@ final class AppController {
                 guard self?.ngrokProcess === process else {
                     return
                 }
+                KotaiLogger.shared.error(
+                    "ngrok exited with status \(process.terminationStatus)"
+                )
                 self?.runtimeStatus = .failed(
-                    "ngrok stopped with status \(process.terminationStatus)."
+                    String(
+                        localized: "ngrok stopped with status \(process.terminationStatus)."
+                    )
                 )
             }
         }
@@ -258,6 +320,9 @@ final class AppController {
         UserDefaults.standard.set(
             endpoint.publicURL.absoluteString,
             forKey: "ngrok-public-url"
+        )
+        KotaiLogger.shared.info(
+            "ngrok endpoint ready; host=\(endpoint.publicURL.host ?? "unknown")"
         )
         return endpoint.publicURL
     }

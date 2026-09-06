@@ -19,12 +19,23 @@ struct KotaiApp: App {
                 SettingsView(controller: controller)
             }
         }
+
+        Window("About Kotai", id: "about") {
+            AboutView()
+        }
+        .windowResizability(.contentSize)
+
+        Window("Kotai Diagnostics", id: "diagnostics") {
+            DiagnosticsView(controller: controller)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
 private struct MenuBarContent: View {
     let controller: AppController
 
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
@@ -52,6 +63,14 @@ private struct MenuBarContent: View {
             presentSettingsWindow(openSettings: openSettings)
         }
         .keyboardShortcut(",")
+
+        Button("Diagnostics…") {
+            presentDiagnosticsWindow(openWindow: openWindow)
+        }
+
+        Button("About Kotai…") {
+            presentAboutWindow(openWindow: openWindow)
+        }
 
         Divider()
 

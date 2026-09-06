@@ -5,7 +5,12 @@ enum AccountMode: String, CaseIterable, Codable, Sendable {
     case work
 
     var displayName: String {
-        rawValue.capitalized
+        switch self {
+        case .personal:
+            String(localized: "Personal")
+        case .work:
+            String(localized: "Work")
+        }
     }
 
     var symbolName: String {

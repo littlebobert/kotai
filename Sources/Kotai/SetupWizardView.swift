@@ -10,11 +10,11 @@ struct SetupWizardView: View {
         var title: String {
             switch self {
             case .openRouter:
-                "OpenRouter accounts"
+                String(localized: "OpenRouter accounts")
             case .ngrok:
                 "ngrok"
             case .cursor:
-                "Connect clients"
+                String(localized: "Connect clients")
             }
         }
     }
@@ -63,7 +63,7 @@ struct SetupWizardView: View {
         }
         .frame(width: 620, height: 520)
         .background {
-            WindowTitleSetter(title: "Kotai Setup")
+            WindowTitleSetter(title: String(localized: "Kotai Setup"))
                 .frame(width: 0, height: 0)
         }
         .task {
@@ -126,6 +126,11 @@ struct SetupWizardView: View {
             SecureField("ngrok authtoken", text: $ngrokAuthtoken)
                 .textFieldStyle(.roundedBorder)
 
+            Link(
+                "Get your ngrok authtoken",
+                destination: URL(string: "https://dashboard.ngrok.com/get-started/your-authtoken")!
+            )
+
             Button {
                 setupNgrok()
             } label: {
@@ -136,8 +141,8 @@ struct SetupWizardView: View {
                     }
                     Text(
                         ngrokPublicURL == nil
-                            ? "Connect ngrok"
-                            : "Reconnect ngrok"
+                            ? String(localized: "Connect ngrok")
+                            : String(localized: "Reconnect ngrok")
                     )
                 }
             }
@@ -150,7 +155,7 @@ struct SetupWizardView: View {
             )
 
             if let ngrokSetupPhase {
-                Text(ngrokSetupPhase.rawValue)
+                Text(ngrokSetupPhase.displayName)
                     .font(.callout)
                     .foregroundStyle(.secondary)
             } else if let ngrokPublicURL {
@@ -161,18 +166,6 @@ struct SetupWizardView: View {
                 .foregroundStyle(.green)
             }
 
-            HStack {
-                SecureField("Cursor proxy token", text: $proxyToken)
-                    .textFieldStyle(.roundedBorder)
-                Button("Generate") {
-                    proxyToken = controller.generateProxyToken()
-                }
-            }
-
-            Link(
-                "Get your ngrok authtoken",
-                destination: URL(string: "https://dashboard.ngrok.com/get-started/your-authtoken")!
-            )
         }
     }
 
@@ -219,7 +212,11 @@ struct SetupWizardView: View {
                     .lineLimit(2)
             }
 
-            Button(currentStep == .cursor ? "Finish" : "Continue") {
+            Button(
+                currentStep == .cursor
+                    ? String(localized: "Finish")
+                    : String(localized: "Continue")
+            ) {
                 advance()
             }
             .buttonStyle(WizardPrimaryButtonStyle())
@@ -235,14 +232,16 @@ struct SetupWizardView: View {
                 && !workOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .ngrok:
             !ngrokAuthtoken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                && !proxyToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 && ngrokPublicURL != nil
         case .cursor:
             true
         }
     }
 
-    private func stepTitle(_ title: String, detail: String) -> some View {
+    private func stepTitle(
+        _ title: LocalizedStringKey,
+        detail: LocalizedStringKey
+    ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.title3.bold())
@@ -251,7 +250,10 @@ struct SetupWizardView: View {
         }
     }
 
-    private func copyableValue(title: String, value: String) -> some View {
+    private func copyableValue(
+        title: LocalizedStringKey,
+        value: String
+    ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title)
                 .font(.caption.weight(.semibold))
@@ -298,10 +300,6 @@ struct SetupWizardView: View {
             proxyToken = try await storedProxyToken
             ngrokAuthtoken = try await storedNgrokAuthtoken
             ngrokPublicURL = controller.configuredPublicURL()
-
-            if proxyToken.isEmpty {
-                proxyToken = controller.generateProxyToken()
-            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -358,11 +356,13 @@ struct SetupWizardView: View {
             }
 
             do {
-                ngrokPublicURL = try await controller.setupNgrok(
+                let setupResult = try await controller.setupNgrok(
                     authtoken: ngrokAuthtoken
                 ) { phase in
                     ngrokSetupPhase = phase
                 }
+                ngrokPublicURL = setupResult.publicURL
+                proxyToken = setupResult.proxyToken
             } catch {
                 ngrokPublicURL = nil
                 errorMessage = error.localizedDescription

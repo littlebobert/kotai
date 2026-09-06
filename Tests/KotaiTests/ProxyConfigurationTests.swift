@@ -76,6 +76,44 @@ struct ProxyConfigurationTests {
         )
     }
 
+
+    @Test
+    func diagnosticRedactionRemovesCredentialsFromCommonLogFormats() {
+        let secrets = [
+            "sk-or-v1-openrouterSecret123",
+            "proxy-client-secret-456",
+            "ngrok-authtoken-789",
+            "query-secret-012",
+            "json-secret-345",
+        ]
+        let logText = """
+        Authorization: Bearer \(secrets[0])
+        proxy_token=\(secrets[1])
+        authtoken=\(secrets[2])
+        https://example.com/path?api_key=\(secrets[3])&mode=test
+        {"apiKey":"\(secrets[4])","model":"test"}
+        """
+
+        let redactedText = KotaiLogger.redactingSensitivePatterns(in: logText)
+
+        for secret in secrets {
+            #expect(!redactedText.contains(secret))
+        }
+        #expect(redactedText.contains("Authorization: [REDACTED]"))
+        #expect(redactedText.contains("proxy_token=[REDACTED]"))
+        #expect(redactedText.contains("api_key=[REDACTED]"))
+        #expect(redactedText.contains(#""apiKey":"[REDACTED]""#))
+    }
+
+    @Test
+    func diagnosticRedactionPreservesNonSensitiveContext() {
+        let logText = "Proxy request failed for model=anthropic/claude with status=401"
+
+        let redactedText = KotaiLogger.redactingSensitivePatterns(in: logText)
+
+        #expect(redactedText == logText)
+    }
+
     private func makeApplication() -> (
         application: Application<OpenRouterProxy>,
         httpClient: HTTPClient

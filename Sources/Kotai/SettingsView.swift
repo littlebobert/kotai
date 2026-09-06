@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var errorMessage: String?
     @State private var isLoading = true
     @State private var isSaving = false
+    @State private var isConfirmingTokenRegeneration = false
 
     var body: some View {
         Form {
@@ -24,12 +25,31 @@ struct SettingsView: View {
                 )
             }
 
-            Section("Cursor authentication") {
+            Section("Client authentication") {
                 SecureField("Proxy token", text: $proxyToken)
 
+                Text(
+                    "For Cursor, copy this token and paste it into the OpenAI API Key secret field."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
                 HStack {
-                    Button("Generate") {
-                        proxyToken = controller.generateProxyToken()
+                    Button("Regenerate") {
+                        isConfirmingTokenRegeneration = true
+                    }
+                    .alert(
+                        "Regenerate proxy token?",
+                        isPresented: $isConfirmingTokenRegeneration
+                    ) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Regenerate", role: .destructive) {
+                            proxyToken = controller.generateProxyToken()
+                        }
+                    } message: {
+                        Text(
+                            "Regenerating this token requires updating every connected client."
+                        )
                     }
                     Button("Copy") {
                         NSPasteboard.general.clearContents()
@@ -43,12 +63,27 @@ struct SettingsView: View {
             }
 
             Section("ngrok") {
-                LabeledContent("Public URL") {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Public URL")
                     Text(
                         ngrokPublicURL?.absoluteString
-                            ?? "Not configured"
+                            ?? String(localized: "Not configured")
                     )
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .textSelection(.enabled)
                 }
+                HStack {
+                    Button("Copy Cursor URL") {
+                        copyBaseURL(appendingPath: "cursor/v1")
+                    }
+                    Button("Copy generic URL") {
+                        copyBaseURL(appendingPath: "v1")
+                    }
+                }
+                .disabled(ngrokPublicURL == nil)
                 Button("Reconnect ngrok…") {
                     controller.beginSetupWizard()
                 }
@@ -69,9 +104,11 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520, height: 450)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(width: 520)
+        .scrollDisabled(true)
         .background {
-            WindowTitleSetter(title: "Kotai Settings")
+            WindowTitleSetter(title: String(localized: "Kotai Settings"))
                 .frame(width: 0, height: 0)
         }
         .task {
@@ -97,6 +134,18 @@ struct SettingsView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func copyBaseURL(appendingPath path: String) {
+        guard let ngrokPublicURL else {
+            return
+        }
+
+        let baseURL = ngrokPublicURL
+            .appending(path: path, directoryHint: .notDirectory)
+            .absoluteString
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(baseURL, forType: .string)
     }
 
     private func save() {

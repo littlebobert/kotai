@@ -1,8 +1,17 @@
 import Foundation
 
-enum NgrokSetupPhase: String, Sendable {
-    case starting = "Starting ngrok…"
-    case discoveringEndpoint = "Discovering your static ngrok URL…"
+enum NgrokSetupPhase: Sendable {
+    case starting
+    case discoveringEndpoint
+
+    var displayName: String {
+        switch self {
+        case .starting:
+            String(localized: "Starting ngrok…")
+        case .discoveringEndpoint:
+            String(localized: "Discovering your static ngrok URL…")
+        }
+    }
 }
 
 struct NgrokEndpoint: Sendable {
@@ -20,14 +29,18 @@ enum NgrokError: LocalizedError {
         switch self {
         case .agentExited(let output):
             output.isEmpty
-                ? "ngrok stopped before creating an endpoint."
-                : "ngrok could not start: \(output)"
+                ? String(localized: "ngrok stopped before creating an endpoint.")
+                : String(localized: "ngrok could not start: \(output)")
         case .invalidAuthtoken:
-            "Paste the authtoken from your ngrok dashboard."
+            String(localized: "Paste the authtoken from your ngrok dashboard.")
         case .noHTTPSEndpoint:
-            "ngrok started, but Kotai could not discover its HTTPS endpoint."
+            String(
+                localized: "ngrok started, but Kotai could not discover its HTTPS endpoint."
+            )
         case .notInstalled:
-            "Install ngrok with `brew install ngrok`, then try again."
+            String(
+                localized: "Install ngrok with `brew install ngrok`, then try again."
+            )
         }
     }
 }
@@ -38,6 +51,14 @@ struct NgrokManager {
         string: "http://127.0.0.1:4041/api/tunnels"
     )!
     private static let proxyAddress = "http://127.0.0.1:18742"
+    private static let configurationURL: URL = {
+        FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        .appendingPathComponent("Kotai", isDirectory: true)
+        .appendingPathComponent("ngrok.yml")
+    }()
 
     func start(
         authtoken rawAuthtoken: String,
@@ -54,13 +75,14 @@ struct NgrokManager {
         let outputPipe = Pipe()
         let process = Process()
         process.executableURL = try executableURL()
+        try writeConfiguration()
         process.arguments = [
             "http",
             Self.proxyAddress,
+            "--config",
+            Self.configurationURL.path,
             "--name",
             "kotai",
-            "--web-addr",
-            "127.0.0.1:4041",
             "--log",
             "stdout",
             "--log-format",
@@ -108,6 +130,26 @@ struct NgrokManager {
             throw NgrokError.notInstalled
         }
         return executableURL
+    }
+
+    private func writeConfiguration() throws {
+        let directoryURL = Self.configurationURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(
+            at: directoryURL,
+            withIntermediateDirectories: true
+        )
+
+        let configuration = """
+        version: 3
+        agent:
+          web_addr: 127.0.0.1:4041
+          update_check: false
+        """
+        try configuration.write(
+            to: Self.configurationURL,
+            atomically: true,
+            encoding: .utf8
+        )
     }
 
     private func discoverPublicURL(for process: Process) async throws -> URL {
