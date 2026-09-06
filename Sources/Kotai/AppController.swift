@@ -125,15 +125,58 @@ final class AppController {
         await refreshRuntime()
     }
 
+    struct SettingsSaveResult: Equatable {
+        let normalizedStaticURL: URL
+        let didRestartNgrok: Bool
+    }
+
+    static func hasStaticURLChanged(
+        proposedURL: NgrokStaticURL,
+        confirmedValue: String?
+    ) -> Bool {
+        guard
+            let confirmedValue,
+            let confirmedURL = try? NgrokStaticURL(confirmedValue)
+        else {
+            return true
+        }
+        return confirmedURL != proposedURL
+    }
+
+    static func shouldRestartNgrok(
+        staticURLChanged: Bool,
+        runtimeStatus: RuntimeStatus,
+        hasCompleteCredentials: Bool
+    ) -> Bool {
+        if staticURLChanged {
+            return true
+        }
+        guard hasCompleteCredentials else {
+            return false
+        }
+
+        switch runtimeStatus {
+        case .needsConfiguration, .failed:
+            return true
+        case .starting:
+            return true
+        case .running:
+            return false
+        }
+    }
+
     func saveSettings(
         personalOpenRouterKey: String,
         workOpenRouterKey: String,
         proxyToken: String,
         staticURL: String
-    ) async throws -> URL {
+    ) async throws -> SettingsSaveResult {
         KotaiLogger.shared.info("Saving settings")
         let normalizedStaticURL = try NgrokStaticURL(staticURL)
-        try await configuration.setCredentials([
+        let confirmedStaticURLValue = try await configuration.credential(
+            .ngrokStaticURL
+        )
+        let normalizedCredentials: [ProxyConfiguration.Credential: String] = [
             .personalOpenRouterKey: personalOpenRouterKey.trimmingCharacters(
                 in: .whitespacesAndNewlines
             ),
@@ -144,13 +187,33 @@ final class AppController {
                 in: .whitespacesAndNewlines
             ),
             .ngrokStaticURL: normalizedStaticURL.absoluteString,
-        ])
+        ]
+        let ngrokAuthtoken = try await configuration.credential(
+            .ngrokAuthtoken
+        ) ?? ""
+        let hasCompleteCredentials = !ngrokAuthtoken.isEmpty
+            && normalizedCredentials.values.allSatisfy { !$0.isEmpty }
+        let shouldRestart = Self.shouldRestartNgrok(
+            staticURLChanged: Self.hasStaticURLChanged(
+                proposedURL: normalizedStaticURL,
+                confirmedValue: confirmedStaticURLValue
+            ),
+            runtimeStatus: runtimeStatus,
+            hasCompleteCredentials: hasCompleteCredentials
+        )
+
+        try await configuration.setCredentials(normalizedCredentials)
         UserDefaults.standard.set(
             normalizedStaticURL.absoluteString,
             forKey: "ngrok-public-url"
         )
-        await refreshRuntime()
-        return normalizedStaticURL.url
+        if shouldRestart {
+            await refreshRuntime()
+        }
+        return SettingsSaveResult(
+            normalizedStaticURL: normalizedStaticURL.url,
+            didRestartNgrok: shouldRestart
+        )
     }
 
     func setupNgrok(

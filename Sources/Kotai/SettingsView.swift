@@ -18,7 +18,7 @@ struct SettingsView: View {
             TabView {
                 accountsTab
                     .tabItem {
-                        Label("Accounts", systemImage: "person.2")
+                        Label("Setups", systemImage: "person.2")
                     }
 
                 routingTab
@@ -28,7 +28,7 @@ struct SettingsView: View {
 
                 connectionTab
                     .tabItem {
-                        Label("Connection", systemImage: "network")
+                        Label("ngrok", systemImage: "network")
                     }
             }
             .frame(height: 370)
@@ -76,8 +76,10 @@ struct SettingsView: View {
         tabContent {
             VStack(spacing: 14) {
                 GroupBox("Model routing") {
-                    ModelRoutingGuide()
-                        .padding(6)
+                    ModelRoutingGuide(
+                        explanation: "These are examples. You must prefix every model ID with kotai/personal or kotai/work. Kotai removes the prefix before sending the request to OpenRouter."
+                    )
+                    .padding(6)
                 }
 
                 GroupBox("Client authentication") {
@@ -153,11 +155,13 @@ struct SettingsView: View {
                     HStack(spacing: 16) {
                         CopyButton(
                             value: baseURL(appendingPath: "cursor/v1"),
-                            label: "Copy Cursor URL"
+                            label: "Copy Cursor URL",
+                            reservedWidth: 170
                         )
                         CopyButton(
                             value: baseURL(appendingPath: "v1"),
-                            label: "Copy generic URL"
+                            label: "Copy generic URL",
+                            reservedWidth: 170
                         )
                     }
 
@@ -186,7 +190,7 @@ struct SettingsView: View {
             .lineLimit(2)
             .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
 
-            Button("Save and restart") {
+            Button("Save") {
                 save()
             }
             .buttonStyle(.borderedProminent)
@@ -258,14 +262,14 @@ struct SettingsView: View {
             defer { isSaving = false }
 
             do {
-                let normalizedStaticURL = try await controller.saveSettings(
+                let saveResult = try await controller.saveSettings(
                     personalOpenRouterKey: personalOpenRouterKey,
                     workOpenRouterKey: workOpenRouterKey,
                     proxyToken: proxyToken,
                     staticURL: ngrokStaticURL
                 )
-                ngrokPublicURL = normalizedStaticURL
-                ngrokStaticURL = normalizedStaticURL.absoluteString
+                ngrokPublicURL = saveResult.normalizedStaticURL
+                ngrokStaticURL = saveResult.normalizedStaticURL.absoluteString
             } catch {
                 errorMessage = error.localizedDescription
             }

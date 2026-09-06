@@ -50,6 +50,12 @@ On first launch, the setup wizard asks for:
 - Your assigned static dev URL from [ngrok Domains](https://dashboard.ngrok.com/domains), such as `https://example.ngrok.app`
 - A generated Kotai proxy token
 
+Pre-release and debug builds used an incompatible Keychain namespace. Current
+signed builds intentionally use a new stable namespace and do not read those
+older items, so users upgrading from those builds enter their credentials once.
+If macOS prompts for the old `com.kotai.credentials` item, deny or cancel the
+prompt and complete setup in the new app.
+
 Kotai stores the confirmed static URL and starts ngrok with `--url` on every launch,
 guaranteeing the same client base URL. Users upgrading from a version before static URL
 configuration are prompted once, with their previously discovered URL prefilled for

@@ -1,14 +1,20 @@
 import SwiftUI
 
 struct ModelRoutingGuide: View {
+    private let explanation: LocalizedStringKey
+
+    init(
+        explanation: LocalizedStringKey = "These are examples. Every model-bearing request must prefix a real model ID with kotai/personal/ or kotai/work/; Kotai removes the prefix before sending it to OpenRouter."
+    ) {
+        self.explanation = explanation
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(
-                "These are examples. Every model-bearing request must prefix a real model ID with kotai/personal/ or kotai/work/; Kotai removes the prefix before sending it to OpenRouter."
-            )
-            .font(.callout)
-            .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
+            Text(explanation)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 10) {
                 routingPattern(

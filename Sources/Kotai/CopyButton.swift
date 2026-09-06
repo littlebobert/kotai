@@ -5,6 +5,7 @@ struct CopyButton: View {
     let value: String
     let label: LocalizedStringKey
     var compact = false
+    var reservedWidth: CGFloat? = nil
 
     @State private var isShowingConfirmation = false
     @State private var resetTask: Task<Void, Never>?
@@ -18,6 +19,7 @@ struct CopyButton: View {
                 .animation(.easeInOut(duration: 0.15), value: isShowingConfirmation)
         }
         .buttonStyle(.borderless)
+        .frame(width: reservedWidth)
         .help(isShowingConfirmation ? "Copied" : label)
         .accessibilityLabel(isShowingConfirmation ? "Copied" : label)
         .disabled(value.isEmpty)
@@ -29,15 +31,32 @@ struct CopyButton: View {
 
     @ViewBuilder
     private var buttonLabel: some View {
-        let displayedLabel: LocalizedStringKey = isShowingConfirmation ? "Copied" : label
-        let systemImage = isShowingConfirmation ? "checkmark" : "doc.on.doc"
-
-        if compact && !isShowingConfirmation {
-            Label(displayedLabel, systemImage: systemImage)
-                .labelStyle(.iconOnly)
+        if compact {
+            ZStack {
+                Label("Copied", systemImage: "checkmark")
+                    .labelStyle(.titleAndIcon)
+                    .hidden()
+                Image(systemName: "doc.on.doc")
+                    .opacity(isShowingConfirmation ? 0 : 1)
+                Label("Copied", systemImage: "checkmark")
+                    .labelStyle(.titleAndIcon)
+                    .opacity(isShowingConfirmation ? 1 : 0)
+            }
         } else {
-            Label(displayedLabel, systemImage: systemImage)
-                .labelStyle(.titleAndIcon)
+            ZStack {
+                Label(label, systemImage: "doc.on.doc")
+                    .labelStyle(.titleAndIcon)
+                    .hidden()
+                Label("Copied", systemImage: "checkmark")
+                    .labelStyle(.titleAndIcon)
+                    .hidden()
+                Label(label, systemImage: "doc.on.doc")
+                    .labelStyle(.titleAndIcon)
+                    .opacity(isShowingConfirmation ? 0 : 1)
+                Label("Copied", systemImage: "checkmark")
+                    .labelStyle(.titleAndIcon)
+                    .opacity(isShowingConfirmation ? 1 : 0)
+            }
         }
     }
 

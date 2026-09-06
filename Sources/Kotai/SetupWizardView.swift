@@ -48,28 +48,38 @@ struct SetupWizardView: View {
             header
             Divider()
 
-            ScrollView {
-                Group {
-                    switch currentStep {
-                    case .openRouter:
-                        openRouterStep
-                    case .ngrok:
-                        ngrokStep
-                    case .cursor:
-                        cursorStep
-                    case .modelRouting:
-                        modelRoutingStep
+            if currentStep == .cursor {
+                cursorStep
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .topLeading
+                    )
+                    .padding(28)
+            } else {
+                ScrollView {
+                    Group {
+                        switch currentStep {
+                        case .openRouter:
+                            openRouterStep
+                        case .ngrok:
+                            ngrokStep
+                        case .cursor:
+                            EmptyView()
+                        case .modelRouting:
+                            modelRoutingStep
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .padding(28)
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-                .padding(28)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             Divider()
             footer
         }
-        .frame(width: 620, height: 520)
+        .frame(width: 620, height: currentStep == .cursor ? 640 : 520)
         .background {
             WindowTitleSetter(title: String(localized: "Kotai Setup"))
                 .frame(width: 0, height: 0)
@@ -110,12 +120,18 @@ struct SetupWizardView: View {
                 detail: "Kotai keeps these in this Mac's Keychain. Every model-bearing request must select a key with a kotai/personal/ or kotai/work/ prefix."
             )
 
-            SecureField("Personal OpenRouter API key", text: $personalOpenRouterKey)
-                .textFieldStyle(.roundedBorder)
-            SecureField("Work OpenRouter API key", text: $workOpenRouterKey)
-                .textFieldStyle(.roundedBorder)
+            labeledSecureField(
+                "Personal OpenRouter API key",
+                prompt: "Paste your personal OpenRouter API key",
+                text: $personalOpenRouterKey
+            )
+            labeledSecureField(
+                "Work OpenRouter API key",
+                prompt: "Paste your work OpenRouter API key",
+                text: $workOpenRouterKey
+            )
 
-            Link(
+            underlinedLink(
                 "Open OpenRouter",
                 destination: URL(string: "https://openrouter.ai")!
             )
@@ -129,27 +145,34 @@ struct SetupWizardView: View {
                 detail: "Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch."
             )
 
-            SecureField("ngrok authtoken", text: $ngrokAuthtoken)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("ngrok authtoken")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                SecureField(
+                    "ngrok authtoken",
+                    text: $ngrokAuthtoken,
+                    prompt: Text("Paste your ngrok authtoken")
+                )
                 .textFieldStyle(.roundedBorder)
-
-            TextField(
-                "Static dev URL",
-                text: $ngrokStaticURL,
-                prompt: Text("https://example.ngrok.app")
-            )
-            .textFieldStyle(.roundedBorder)
-
-            Text("Find your assigned URL in the ngrok Domains dashboard.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-
-            HStack(spacing: 16) {
-                Link(
+                underlinedLink(
                     "Get your ngrok authtoken",
                     destination: URL(string: "https://dashboard.ngrok.com/get-started/your-authtoken")!
                 )
-                Link(
-                    "Open ngrok Domains",
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("ngrok static domain")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                TextField(
+                    "ngrok static domain",
+                    text: $ngrokStaticURL,
+                    prompt: Text("https://example.ngrok.app")
+                )
+                .textFieldStyle(.roundedBorder)
+                underlinedLink(
+                    "Get your ngrok static domain",
                     destination: URL(string: "https://dashboard.ngrok.com/domains")!
                 )
             }
@@ -284,6 +307,28 @@ struct SetupWizardView: View {
             Text(detail)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private func labeledSecureField(
+        _ label: LocalizedStringKey,
+        prompt: LocalizedStringKey,
+        text: Binding<String>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            SecureField(label, text: text, prompt: Text(prompt))
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+
+    private func underlinedLink(
+        _ label: LocalizedStringKey,
+        destination: URL
+    ) -> some View {
+        Link(label, destination: destination)
+            .underline()
     }
 
     private func copyableValue(

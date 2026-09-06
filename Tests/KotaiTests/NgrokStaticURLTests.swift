@@ -165,4 +165,86 @@ struct NgrokStaticURLTests {
         #expect(selection.confirmedURL == nil)
         #expect(selection.setupSuggestionURL == nil)
     }
+
+    @Test @MainActor
+    func runningRuntimeWithSameURLDoesNotRestart() {
+        #expect(!AppController.shouldRestartNgrok(
+            staticURLChanged: false,
+            runtimeStatus: .running,
+            hasCompleteCredentials: true
+        ))
+    }
+
+    @Test @MainActor
+    func runningRuntimeWithChangedURLRestarts() {
+        #expect(AppController.shouldRestartNgrok(
+            staticURLChanged: true,
+            runtimeStatus: .running,
+            hasCompleteCredentials: true
+        ))
+    }
+
+    @Test @MainActor
+    func failedRuntimeWithCompleteCredentialsRestarts() {
+        #expect(AppController.shouldRestartNgrok(
+            staticURLChanged: false,
+            runtimeStatus: .failed("Unavailable"),
+            hasCompleteCredentials: true
+        ))
+    }
+
+    @Test @MainActor
+    func failedRuntimeWithIncompleteCredentialsDoesNotRestart() {
+        #expect(!AppController.shouldRestartNgrok(
+            staticURLChanged: false,
+            runtimeStatus: .failed("Unavailable"),
+            hasCompleteCredentials: false
+        ))
+    }
+
+    @Test @MainActor
+    func needsConfigurationRuntimeWithCompleteCredentialsRestarts() {
+        #expect(AppController.shouldRestartNgrok(
+            staticURLChanged: false,
+            runtimeStatus: .needsConfiguration,
+            hasCompleteCredentials: true
+        ))
+    }
+
+    @Test @MainActor
+    func needsConfigurationRuntimeWithIncompleteCredentialsDoesNotRestart() {
+        #expect(!AppController.shouldRestartNgrok(
+            staticURLChanged: false,
+            runtimeStatus: .needsConfiguration,
+            hasCompleteCredentials: false
+        ))
+    }
+
+    @Test @MainActor
+    func startingRuntimeWithCompleteCredentialsRestarts() {
+        #expect(AppController.shouldRestartNgrok(
+            staticURLChanged: false,
+            runtimeStatus: .starting,
+            hasCompleteCredentials: true
+        ))
+    }
+
+    @Test @MainActor
+    func startingRuntimeWithIncompleteCredentialsDoesNotRestart() {
+        #expect(!AppController.shouldRestartNgrok(
+            staticURLChanged: false,
+            runtimeStatus: .starting,
+            hasCompleteCredentials: false
+        ))
+    }
+
+    @Test @MainActor
+    func canonicallyEquivalentStaticURLIsUnchanged() throws {
+        let proposedURL = try NgrokStaticURL("HTTPS://X/")
+
+        #expect(!AppController.hasStaticURLChanged(
+            proposedURL: proposedURL,
+            confirmedValue: "https://x"
+        ))
+    }
 }

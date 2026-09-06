@@ -17,16 +17,18 @@ enum SecureStoreError: LocalizedError {
 }
 
 struct SecureStore: Sendable {
-    private let service = "com.kotai.credentials"
+    static let productionService = "com.justin.Kotai.credentials.v2"
+
+    let service: String
+
+    init(service: String = Self.productionService) {
+        self.service = service
+    }
+
+    // Never query earlier service namespaces: their pre-release ACL can trigger a login Keychain password prompt.
 
     func read(account: String) throws -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnData as String: true,
-        ]
+        let query = readQuery(account: account)
 
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
@@ -49,11 +51,7 @@ struct SecureStore: Sendable {
 
     func write(_ value: String, account: String) throws {
         let data = Data(value.utf8)
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
+        let query = mutationQuery(account: account)
         let attributes: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
@@ -82,15 +80,26 @@ struct SecureStore: Sendable {
     }
 
     func delete(account: String) throws {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-        ]
+        let query = mutationQuery(account: account)
         let status = SecItemDelete(query as CFDictionary)
 
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw SecureStoreError.unexpectedStatus(status)
         }
+    }
+
+    func readQuery(account: String) -> [String: Any] {
+        var query = mutationQuery(account: account)
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        query[kSecReturnData as String] = true
+        return query
+    }
+
+    func mutationQuery(account: String) -> [String: Any] {
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+        ]
     }
 }
