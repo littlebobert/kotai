@@ -71,13 +71,9 @@ struct OpenRouterProxy: HTTPResponder {
             )
         }
 
-        let defaultAccountMode = await configuration.accountMode
         let routingResult: OpenRouterRequestRouting
         do {
-            routingResult = try await resolveRouting(
-                for: request,
-                defaultAccountMode: defaultAccountMode
-            )
+            routingResult = try await resolveRouting(for: request)
         } catch let routingError as OpenRouterRoutingError {
             KotaiLogger.shared.warning(
                 "Proxy \(requestID) rejected malformed model routing"
@@ -145,12 +141,11 @@ struct OpenRouterProxy: HTTPResponder {
     }
 
     private func resolveRouting(
-        for request: Request,
-        defaultAccountMode: AccountMode
+        for request: Request
     ) async throws -> OpenRouterRequestRouting {
         guard request.method != .get && request.method != .head else {
             return OpenRouterRequestRouting(
-                accountMode: defaultAccountMode,
+                accountMode: .personal,
                 body: nil,
                 normalizedModel: nil
             )
@@ -159,10 +154,7 @@ struct OpenRouterProxy: HTTPResponder {
         let body = try await request.body.collect(
             upTo: Self.maximumRequestBodySize
         )
-        return try OpenRouterRequestRouter.resolve(
-            body: body,
-            defaultAccountMode: defaultAccountMode
-        )
+        return try OpenRouterRequestRouter.resolve(body: body)
     }
 
     private func forward(
@@ -229,9 +221,15 @@ struct OpenRouterProxy: HTTPResponder {
 
 enum OpenRouterRoutingError: Error, Equatable {
     case malformedModel
+    case unprefixedModel
 
     var safeDescription: String {
-        "Malformed Kotai model routing"
+        switch self {
+        case .malformedModel:
+            String(localized: "Malformed Kotai model routing")
+        case .unprefixedModel:
+            String(localized: "Prefix the model with kotai/personal/ or kotai/work/")
+        }
     }
 }
 
@@ -245,8 +243,7 @@ enum OpenRouterRequestRouter {
     private static let prefix = "kotai/"
 
     static func resolve(
-        body: ByteBuffer,
-        defaultAccountMode: AccountMode
+        body: ByteBuffer
     ) throws -> OpenRouterRequestRouting {
         let data = Data(body.readableBytesView)
         guard
@@ -254,27 +251,40 @@ enum OpenRouterRequestRouter {
             var object = jsonValue as? [String: Any],
             let model = object["model"] as? String
         else {
+            // Requests without a usable model cannot select an account. Preserve
+            // their bytes and use the personal transport credential consistently.
             return OpenRouterRequestRouting(
-                accountMode: defaultAccountMode,
+                accountMode: .personal,
                 body: body,
                 normalizedModel: nil
             )
         }
 
         guard model.hasPrefix(prefix) else {
-            return OpenRouterRequestRouting(
-                accountMode: defaultAccountMode,
-                body: body,
-                normalizedModel: model
-            )
+            throw OpenRouterRoutingError.unprefixedModel
+        }
+
+        let lowercasedModel = model.lowercased()
+        let hasCaseMismatchedAccountPrefix = (
+            lowercasedModel.hasPrefix("kotai/personal/")
+                || lowercasedModel.hasPrefix("kotai/work/")
+        ) && !(
+            model.hasPrefix("kotai/personal/")
+                || model.hasPrefix("kotai/work/")
+        )
+        guard !hasCaseMismatchedAccountPrefix else {
+            throw OpenRouterRoutingError.unprefixedModel
         }
 
         let components = model.split(separator: "/", omittingEmptySubsequences: false)
         guard
-            components.count >= 3,
+            components.count >= 4,
             components[0] == "kotai",
             let accountMode = AccountMode(rawValue: String(components[1])),
-            components.dropFirst(2).allSatisfy({ !$0.isEmpty })
+            components.dropFirst(2).allSatisfy({ component in
+                !component.isEmpty
+                    && component.allSatisfy { !$0.isWhitespace }
+            })
         else {
             throw OpenRouterRoutingError.malformedModel
         }

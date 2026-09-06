@@ -11,16 +11,13 @@ actor ProxyConfiguration {
 
     private static let vaultAccount = "credential-vault-v1"
 
-    private(set) var accountMode: AccountMode
     private let secureStore: SecureStore
     private var credentialCache: [Credential: String]?
 
     init(
-        accountMode: AccountMode = .personal,
         secureStore: SecureStore = SecureStore(),
         initialCredentials: [Credential: String]? = nil
     ) {
-        self.accountMode = accountMode
         self.secureStore = secureStore
         self.credentialCache = initialCredentials
         if let initialCredentials {
@@ -28,10 +25,6 @@ actor ProxyConfiguration {
                 KotaiLogger.shared.registerSensitiveValue(value)
             }
         }
-    }
-
-    func setAccountMode(_ accountMode: AccountMode) {
-        self.accountMode = accountMode
     }
 
     func credential(_ credential: Credential) throws -> String? {

@@ -42,7 +42,6 @@ final class AppController {
     }
 
     private static let proxyPort = 18_742
-    private static var hasInstalledApplicationIcon = false
 
     let autoUpdates = AutoUpdateService()
 
@@ -52,7 +51,6 @@ final class AppController {
     private var proxyTask: Task<Void, Never>?
     private var ngrokProcess: Process?
 
-    private(set) var accountMode: AccountMode
     private(set) var runtimeStatus: RuntimeStatus = .starting
     private(set) var isSetupRequired = false
     private(set) var shouldShowSetupWizard = false
@@ -60,13 +58,7 @@ final class AppController {
     init() {
         Self.installApplicationIcon()
 
-        let storedMode = UserDefaults.standard.string(forKey: "account-mode")
-            .flatMap(AccountMode.init(rawValue:))
-            ?? .personal
-        let configuration = ProxyConfiguration(accountMode: storedMode)
-
-        self.accountMode = storedMode
-        self.configuration = configuration
+        self.configuration = ProxyConfiguration()
         var httpClientConfiguration = HTTPClient.Configuration()
         httpClientConfiguration.httpVersion = .http1Only
         self.httpClient = HTTPClient(
@@ -74,27 +66,12 @@ final class AppController {
             configuration: httpClientConfiguration
         )
         KotaiLogger.shared.info(
-            "App initialized; account=\(storedMode.rawValue); " +
-                "upstreamHTTP=http1; networkBackend=nio-posix"
+            "App initialized; upstreamHTTP=http1; networkBackend=nio-posix"
         )
     }
 
     private static func installApplicationIcon() {
-        guard !hasInstalledApplicationIcon else {
-            return
-        }
-        hasInstalledApplicationIcon = true
-
-        let applicationIcon = NSImage(named: "KotaiIcon") ?? Bundle.main
-            .url(forResource: "Kotai", withExtension: "icns")
-            .flatMap(NSImage.init(contentsOf:))
-
-        guard let applicationIcon else {
-            KotaiLogger.shared.warning("Packaged application icon could not be loaded")
-            return
-        }
-
-        NSApplication.shared.applicationIconImage = applicationIcon
+        NSApplication.shared.applicationIconImage = KotaiIcon.image
     }
 
     var statusDetail: String? {
@@ -110,18 +87,6 @@ final class AppController {
         startProxy()
         Task {
             await refreshRuntime()
-        }
-    }
-
-    func selectAccountMode(_ accountMode: AccountMode) {
-        self.accountMode = accountMode
-        UserDefaults.standard.set(accountMode.rawValue, forKey: "account-mode")
-        KotaiLogger.shared.info(
-            "Default account changed to \(accountMode.rawValue)"
-        )
-
-        Task {
-            await configuration.setAccountMode(accountMode)
         }
     }
 
@@ -220,13 +185,20 @@ final class AppController {
         return (publicURL, proxyToken)
     }
 
-    func configuredStaticURL() async throws -> URL? {
-        if let storedStaticURL = try await configuration.credential(.ngrokStaticURL),
-           let normalizedStaticURL = try? NgrokStaticURL(storedStaticURL)
-        {
-            return normalizedStaticURL.url
-        }
-        return legacyConfiguredPublicURL()
+    func confirmedStaticURL() async throws -> URL? {
+        let selection = StaticURLSelection(
+            confirmedValue: try await configuration.credential(.ngrokStaticURL),
+            legacyValue: nil
+        )
+        return selection.confirmedURL
+    }
+
+    func setupStaticURLSuggestion() async throws -> URL? {
+        let selection = StaticURLSelection(
+            confirmedValue: try await configuration.credential(.ngrokStaticURL),
+            legacyValue: legacyConfiguredPublicURL()?.absoluteString
+        )
+        return selection.setupSuggestionURL
     }
 
     func configuredPublicURL() -> URL? {

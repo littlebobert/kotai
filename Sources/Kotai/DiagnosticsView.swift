@@ -13,9 +13,6 @@ struct DiagnosticsView: View {
                     controller.runtimeStatus.displayName,
                     systemImage: controller.runtimeStatus.symbolName
                 )
-                Spacer()
-                Text("Default account: \(controller.accountMode.displayName)")
-                    .foregroundStyle(.secondary)
             }
 
             if let publicURL = controller.configuredPublicURL() {

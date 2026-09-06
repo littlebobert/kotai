@@ -1,11 +1,10 @@
-import AppKit
 import SwiftUI
 
 struct ModelRoutingGuide: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(
-                "Use personal and work projects at the same time. Prefix any model ID with one of these patterns; Kotai removes the prefix before sending to OpenRouter. Unprefixed model IDs use the menu-bar default."
+                "These are examples. Every model-bearing request must prefix a real model ID with kotai/personal/ or kotai/work/; Kotai removes the prefix before sending it to OpenRouter."
             )
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -13,12 +12,12 @@ struct ModelRoutingGuide: View {
 
             HStack(spacing: 10) {
                 routingPattern(
-                    title: "Personal model prefix",
-                    value: "kotai/personal/<model-id>"
+                    title: "Personal model",
+                    value: "kotai/personal/openai/gpt-5.6"
                 )
                 routingPattern(
-                    title: "Work model prefix",
-                    value: "kotai/work/<model-id>"
+                    title: "Work model",
+                    value: "kotai/work/anthropic/claude-opus-4.1"
                 )
             }
         }
@@ -38,18 +37,11 @@ struct ModelRoutingGuide: View {
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .minimumScaleFactor(0.65)
 
                 Spacer(minLength: 0)
 
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(value, forType: .string)
-                } label: {
-                    Image(systemName: "doc.on.doc")
-                }
-                .buttonStyle(.borderless)
-                .help("Copy")
+                CopyButton(value: value, label: "Copy", compact: true)
             }
             .padding(8)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 7))

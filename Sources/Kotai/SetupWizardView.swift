@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 struct SetupWizardView: View {
@@ -6,6 +5,7 @@ struct SetupWizardView: View {
         case openRouter
         case ngrok
         case cursor
+        case modelRouting
 
         var title: String {
             switch self {
@@ -15,6 +15,8 @@ struct SetupWizardView: View {
                 "ngrok"
             case .cursor:
                 String(localized: "Connect clients")
+            case .modelRouting:
+                String(localized: "Model routing")
             }
         }
     }
@@ -55,6 +57,8 @@ struct SetupWizardView: View {
                         ngrokStep
                     case .cursor:
                         cursorStep
+                    case .modelRouting:
+                        modelRoutingStep
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -78,10 +82,7 @@ struct SetupWizardView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Image("KotaiIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 40, height: 40)
+                KotaiIconView(size: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Set up Kotai")
@@ -106,7 +107,7 @@ struct SetupWizardView: View {
         VStack(alignment: .leading, spacing: 18) {
             stepTitle(
                 "Add both OpenRouter keys",
-                detail: "Kotai keeps these in this Mac's Keychain and sends each request with the key selected by its model prefix or the menu-bar default."
+                detail: "Kotai keeps these in this Mac's Keychain. Every model-bearing request must select a key with a kotai/personal/ or kotai/work/ prefix."
             )
 
             SecureField("Personal OpenRouter API key", text: $personalOpenRouterKey)
@@ -214,15 +215,19 @@ struct SetupWizardView: View {
                 value: genericBaseURL
             )
 
-            Divider()
-
-            Text("Model routing")
-                .font(.headline)
-            ModelRoutingGuide()
-
             Text("In Cursor, use its OpenAI API key field and Override OpenAI Base URL. Other clients must support an OpenAI-compatible custom base URL.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private var modelRoutingStep: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            stepTitle(
+                "Route models to each account",
+                detail: "Use a model prefix to choose personal or work billing for each request."
+            )
+            ModelRoutingGuide()
         }
     }
 
@@ -244,7 +249,7 @@ struct SetupWizardView: View {
             }
 
             Button(
-                currentStep == .cursor
+                currentStep == .modelRouting
                     ? String(localized: "Finish")
                     : String(localized: "Continue")
             ) {
@@ -264,7 +269,7 @@ struct SetupWizardView: View {
         case .ngrok:
             !ngrokAuthtoken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 && ngrokPublicURL != nil
-        case .cursor:
+        case .cursor, .modelRouting:
             true
         }
     }
@@ -294,13 +299,7 @@ struct SetupWizardView: View {
                     .font(.system(.body, design: .monospaced))
                     .textSelection(.enabled)
                 Spacer()
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(value, forType: .string)
-                } label: {
-                    Image(systemName: "doc.on.doc")
-                }
-                .buttonStyle(.borderless)
+                CopyButton(value: value, label: "Copy", compact: true)
             }
             .padding(10)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
@@ -325,13 +324,17 @@ struct SetupWizardView: View {
             async let workKey = controller.loadCredential(.workOpenRouterKey)
             async let storedProxyToken = controller.loadCredential(.proxyToken)
             async let storedNgrokAuthtoken = controller.loadCredential(.ngrokAuthtoken)
-            async let storedStaticURL = controller.configuredStaticURL()
+            async let confirmedStaticURL = controller.confirmedStaticURL()
+            async let suggestedStaticURL = controller.setupStaticURLSuggestion()
 
             personalOpenRouterKey = try await personalKey
             workOpenRouterKey = try await workKey
             proxyToken = try await storedProxyToken
             ngrokAuthtoken = try await storedNgrokAuthtoken
-            ngrokStaticURL = try await storedStaticURL?.absoluteString ?? ""
+            let confirmedURL = try await confirmedStaticURL
+            let suggestionURL = try await suggestedStaticURL
+            ngrokStaticURL = (confirmedURL ?? suggestionURL)?.absoluteString ?? ""
+            ngrokPublicURL = confirmedURL
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -346,6 +349,8 @@ struct SetupWizardView: View {
         case .ngrok:
             saveCredentials()
         case .cursor:
+            currentStep = .modelRouting
+        case .modelRouting:
             controller.completeSetupWizard()
         }
     }

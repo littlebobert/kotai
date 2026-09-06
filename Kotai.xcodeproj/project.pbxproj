@@ -16,6 +16,8 @@
 		32D37C547F96F25777446BF4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FEC7D38B67AF487A31A2BA33 /* Localizable.strings */; };
 		3686A399252CD0904E05455C /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64F440FC8B3881754594CA6 /* AboutView.swift */; };
 		415586939DD6DB06796A741C /* OpenRouterProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */; };
+		46A04F21277425D4EBF1E02E /* CopyButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE70C569EE2A0B32C553C4F5 /* CopyButton.swift */; };
+		4C277BC1773FE0869759E4CE /* KotaiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC116EBFFDB4C0EE879AA4D0 /* KotaiIcon.swift */; };
 		4E325A959BD2A91458D23CF2 /* WindowTitleSetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */; };
 		63B7A25AAF10256D03AA9323 /* OpenRouterRequestRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 583CCCA5CE30281FF8ACAF0A /* OpenRouterRequestRouterTests.swift */; };
 		648C92D54FC701F28BBF7AF8 /* Kotai.icns in Resources */ = {isa = PBXBuildFile; fileRef = B1B535F95E38213C933FDE90 /* Kotai.icns */; };
@@ -39,6 +41,7 @@
 		E8954E2E5EED844F21C1AE59 /* NIOPosix in Frameworks */ = {isa = PBXBuildFile; productRef = 3A79CE5037F5CADE08EEDE52 /* NIOPosix */; };
 		E9BA4ECA7C36F34467F93220 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 720DC9F6B64A3842E6BDBED6 /* DiagnosticsView.swift */; };
 		EF5725B0288E5D0EA9EEA803 /* NgrokManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F31FCE02D24946AD7CF1152 /* NgrokManager.swift */; };
+		F8DB5B101EA076EBBF221DDF /* StaticURLSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 423E121FECE5E76EA29353FA /* StaticURLSelection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +60,7 @@
 		209F4F1866BE4CA484DED4FB /* KotaiIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = KotaiIcon.png; sourceTree = "<group>"; };
 		25A72AC437443DD4C667C7D5 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		414BD807CE1DE877C13BDBF3 /* KotaiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KotaiApp.swift; sourceTree = "<group>"; };
+		423E121FECE5E76EA29353FA /* StaticURLSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaticURLSelection.swift; sourceTree = "<group>"; };
 		44905518439469E60E8DD0B7 /* hummingbird */ = {isa = PBXFileReference; lastKnownFileType = folder; name = hummingbird; path = Vendor/hummingbird; sourceTree = SOURCE_ROOT; };
 		4F31FCE02D24946AD7CF1152 /* NgrokManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NgrokManager.swift; sourceTree = "<group>"; };
 		4F92E49FEAC01A7C9BDDE159 /* AccountMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountMode.swift; sourceTree = "<group>"; };
@@ -69,6 +73,7 @@
 		8C281B681D5ADC13818F570D /* KotaiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KotaiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		93A6B0C5196695A46D721EA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowTitleSetter.swift; sourceTree = "<group>"; };
+		AE70C569EE2A0B32C553C4F5 /* CopyButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyButton.swift; sourceTree = "<group>"; };
 		B1B535F95E38213C933FDE90 /* Kotai.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Kotai.icns; sourceTree = "<group>"; };
 		C4BF1750A9A7F5AB59887638 /* SetupWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupWizardView.swift; sourceTree = "<group>"; };
 		CC19527FEE5DE169CFB5E405 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -78,6 +83,7 @@
 		E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
 		E64F440FC8B3881754594CA6 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterProxy.swift; sourceTree = "<group>"; };
+		FC116EBFFDB4C0EE879AA4D0 /* KotaiIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KotaiIcon.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,8 +142,10 @@
 				4F92E49FEAC01A7C9BDDE159 /* AccountMode.swift */,
 				825302CD8F058012CA2DBE80 /* AppController.swift */,
 				E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */,
+				AE70C569EE2A0B32C553C4F5 /* CopyButton.swift */,
 				720DC9F6B64A3842E6BDBED6 /* DiagnosticsView.swift */,
 				414BD807CE1DE877C13BDBF3 /* KotaiApp.swift */,
+				FC116EBFFDB4C0EE879AA4D0 /* KotaiIcon.swift */,
 				704305B8E8C5F61C3FFC177F /* KotaiLogger.swift */,
 				196E30AEC591A52F38C65137 /* ModelRoutingGuide.swift */,
 				4F31FCE02D24946AD7CF1152 /* NgrokManager.swift */,
@@ -146,6 +154,7 @@
 				8225133F174F76814E117CC9 /* SecureStore.swift */,
 				CC19527FEE5DE169CFB5E405 /* SettingsView.swift */,
 				C4BF1750A9A7F5AB59887638 /* SetupWizardView.swift */,
+				423E121FECE5E76EA29353FA /* StaticURLSelection.swift */,
 				D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */,
 				A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */,
 				52DAD33DF6C470D125A60167 /* Resources */,
@@ -302,8 +311,10 @@
 				098FC5CCCB93DA44FE85325A /* AccountMode.swift in Sources */,
 				785DA07B4AD73DDC6194C299 /* AppController.swift in Sources */,
 				74B5C7B007274E76C92E1526 /* AutoUpdateService.swift in Sources */,
+				46A04F21277425D4EBF1E02E /* CopyButton.swift in Sources */,
 				E9BA4ECA7C36F34467F93220 /* DiagnosticsView.swift in Sources */,
 				189B242E47C5E21F68599710 /* KotaiApp.swift in Sources */,
+				4C277BC1773FE0869759E4CE /* KotaiIcon.swift in Sources */,
 				9A389D4FE0B208AE9667A578 /* KotaiLogger.swift in Sources */,
 				6644632C40031DF3D239117A /* ModelRoutingGuide.swift in Sources */,
 				EF5725B0288E5D0EA9EEA803 /* NgrokManager.swift in Sources */,
@@ -312,6 +323,7 @@
 				71B1ED5F45BFD5AAF1DA56D7 /* SecureStore.swift in Sources */,
 				D581CE795EBD760908DF2FA0 /* SettingsView.swift in Sources */,
 				299DAA3F0D0D515F9FAC3C22 /* SetupWizardView.swift in Sources */,
+				F8DB5B101EA076EBBF221DDF /* StaticURLSelection.swift in Sources */,
 				A612D4132823FC35F899F459 /* WindowPresentation.swift in Sources */,
 				4E325A959BD2A91458D23CF2 /* WindowTitleSetter.swift in Sources */,
 			);
@@ -357,7 +369,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = XDWKSAH7W3;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -366,7 +378,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.justin.Kotai;
 				PRODUCT_NAME = Kotai;
 				SDKROOT = macosx;
@@ -378,14 +390,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/Kotai/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.justin.Kotai;
 				PRODUCT_NAME = Kotai;
 				SDKROOT = macosx;
@@ -427,7 +439,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -447,7 +459,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -497,7 +509,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = XDWKSAH7W3;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -513,7 +525,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.1;
+				MARKETING_VERSION = 0.1.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = NO;

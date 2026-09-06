@@ -1,4 +1,5 @@
 import AsyncHTTPClient
+import Foundation
 import Hummingbird
 import HummingbirdTesting
 import NIOCore
@@ -6,16 +7,6 @@ import Testing
 @testable import Kotai
 
 struct ProxyConfigurationTests {
-    @Test
-    func accountModeCanBeChanged() async {
-        let configuration = ProxyConfiguration(accountMode: .personal)
-
-        await configuration.setAccountMode(.work)
-
-        let accountMode = await configuration.accountMode
-        #expect(accountMode == .work)
-    }
-
     @Test
     func healthEndpointIsAvailableWithoutCredentials() async throws {
         let (application, httpClient) = makeApplication()
@@ -65,6 +56,37 @@ struct ProxyConfigurationTests {
                 #expect(
                     String(buffer: response.body)
                         == #"{"error":"Malformed Kotai model routing"}"#
+                )
+            }
+        }
+        try await httpClient.shutdown()
+    }
+
+    @Test
+    func unprefixedModelReturnsBadRequestWithGuidance() async throws {
+        let (application, httpClient) = makeApplication(
+            credentials: [.proxyToken: "test-proxy-token"]
+        )
+        let headers: HTTPFields = [
+            .authorization: "Bearer test-proxy-token",
+            .contentType: "application/json",
+        ]
+        let body = ByteBuffer(string: #"{"model":"openai/gpt-5"}"#)
+
+        try await application.test(.router) { client in
+            try await client.execute(
+                uri: "/v1/chat/completions",
+                method: .post,
+                headers: headers,
+                body: body
+            ) { response in
+                #expect(response.status == .badRequest)
+                let responseObject = try JSONSerialization.jsonObject(
+                    with: Data(response.body.readableBytesView)
+                ) as? [String: String]
+                #expect(
+                    responseObject?["error"]
+                        == "Prefix the model with kotai/personal/ or kotai/work/"
                 )
             }
         }
@@ -179,14 +201,12 @@ struct ProxyConfigurationTests {
     }
 
     private func makeApplication(
-        accountMode: AccountMode = .personal,
         credentials: [ProxyConfiguration.Credential: String]? = nil
     ) -> (
         application: Application<OpenRouterProxy>,
         httpClient: HTTPClient
     ) {
         let configuration = ProxyConfiguration(
-            accountMode: accountMode,
             initialCredentials: credentials
         )
         let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)

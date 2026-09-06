@@ -39,23 +39,6 @@ private struct MenuBarContent: View {
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
-        Text("Default for unprefixed models")
-            .disabled(true)
-
-        ForEach(AccountMode.allCases, id: \.self) { accountMode in
-            Button {
-                controller.selectAccountMode(accountMode)
-            } label: {
-                if controller.accountMode == accountMode {
-                    Label(accountMode.displayName, systemImage: "checkmark")
-                } else {
-                    Text(accountMode.displayName)
-                }
-            }
-        }
-
-        Divider()
-
         Button("Run Setup…") {
             controller.beginSetupWizard()
             presentSettingsWindow(openSettings: openSettings)
@@ -98,7 +81,7 @@ private struct MenuBarLabel: View {
 
     var body: some View {
         Label(
-            "Kotai: \(controller.accountMode.displayName) default",
+            "Kotai",
             systemImage: "signpost.right.and.left"
         )
         .task {

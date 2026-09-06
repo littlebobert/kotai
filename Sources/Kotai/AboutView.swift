@@ -4,10 +4,7 @@ import SwiftUI
 struct AboutView: View {
     var body: some View {
         VStack(spacing: 14) {
-            Image("KotaiIcon")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 64, height: 64)
+            KotaiIconView(size: 64)
 
             Text("Kotai")
                 .font(.largeTitle.bold())

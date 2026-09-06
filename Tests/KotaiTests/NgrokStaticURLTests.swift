@@ -121,4 +121,48 @@ struct NgrokStaticURLTests {
                 == "ngrok-static-url"
         )
     }
+
+    @Test
+    func confirmedURLWinsOverLegacySuggestion() {
+        let selection = StaticURLSelection(
+            confirmedValue: " HTTPS://CONFIRMED.NGROK.APP/ ",
+            legacyValue: "https://legacy.ngrok.app"
+        )
+
+        #expect(selection.confirmedURL?.absoluteString == "https://confirmed.ngrok.app")
+        #expect(selection.setupSuggestionURL == selection.confirmedURL)
+    }
+
+    @Test
+    func legacyURLIsSuggestionWithoutConfirmation() {
+        let selection = StaticURLSelection(
+            confirmedValue: nil,
+            legacyValue: " HTTPS://LEGACY.NGROK.APP/ "
+        )
+
+        #expect(selection.confirmedURL == nil)
+        #expect(selection.setupSuggestionURL?.absoluteString == "https://legacy.ngrok.app")
+    }
+
+    @Test
+    func invalidConfirmedURLFallsBackOnlyAsSuggestion() {
+        let selection = StaticURLSelection(
+            confirmedValue: "http://invalid.ngrok.app",
+            legacyValue: "https://legacy.ngrok.app"
+        )
+
+        #expect(selection.confirmedURL == nil)
+        #expect(selection.setupSuggestionURL?.absoluteString == "https://legacy.ngrok.app")
+    }
+
+    @Test
+    func invalidStoredURLsProduceNoSelection() {
+        let selection = StaticURLSelection(
+            confirmedValue: "not a URL",
+            legacyValue: "http://legacy.ngrok.app"
+        )
+
+        #expect(selection.confirmedURL == nil)
+        #expect(selection.setupSuggestionURL == nil)
+    }
 }
