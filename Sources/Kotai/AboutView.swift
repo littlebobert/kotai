@@ -35,12 +35,6 @@ struct AboutView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 18)
         .frame(width: 320)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("About Kotai")
-                    .font(.headline)
-            }
-        }
     }
 }
 

@@ -26,7 +26,6 @@ struct KotaiApp: App {
         Window("About Kotai", id: "about") {
             AboutView()
         }
-        .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
 
         Window("Kotai Diagnostics", id: "diagnostics") {
