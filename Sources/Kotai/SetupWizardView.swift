@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct SetupWizardView: View {
@@ -26,11 +27,13 @@ struct SetupWizardView: View {
 
     let controller: AppController
 
+    @Environment(\.dismiss) private var dismiss
     @State private var currentStep = Step.openRouter
     @State private var personalOpenRouterKey = ""
     @State private var workOpenRouterKey = ""
     @State private var proxyToken = ""
     @State private var ngrokAuthtoken = ""
+    @State private var storedNgrokAuthtoken = ""
     @State private var ngrokStaticURL = ""
     @State private var ngrokPublicURL: URL?
     @State private var ngrokSetupPhase: NgrokSetupPhase?
@@ -165,7 +168,7 @@ struct SetupWizardView: View {
                 RevealableSecureField(
                     label: "ngrok authtoken",
                     text: $ngrokAuthtoken,
-                    prompt: "Paste your ngrok authtoken"
+                    prompt: ngrokAuthtokenPrompt
                 )
                 .textFieldStyle(.roundedBorder)
                 underlinedLink(
@@ -252,7 +255,7 @@ struct SetupWizardView: View {
 
     private var supportStep: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Image(systemName: "lifepreserver.fill")
+            Image(systemName: "questionmark.circle")
                 .font(.system(size: 42))
                 .foregroundStyle(.tint)
                 .accessibilityHidden(true)
@@ -321,6 +324,19 @@ struct SetupWizardView: View {
         return String(localized: "Continue")
     }
 
+    private var ngrokAuthtokenPrompt: LocalizedStringKey {
+        storedNgrokAuthtoken.isEmpty
+            ? "Paste your ngrok authtoken"
+            : "Saved authtoken"
+    }
+
+    private var effectiveNgrokAuthtoken: String {
+        let enteredAuthtoken = ngrokAuthtoken.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        return enteredAuthtoken.isEmpty ? storedNgrokAuthtoken : enteredAuthtoken
+    }
+
     private var canContinue: Bool {
         guard !credentialLoadFailed else {
             return false
@@ -330,7 +346,7 @@ struct SetupWizardView: View {
             return !personalOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 && !workOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .ngrok:
-            return !ngrokAuthtoken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            return !effectiveNgrokAuthtoken.isEmpty
                 && !ngrokStaticURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .cursor, .modelRouting, .support:
             return true
@@ -422,21 +438,22 @@ struct SetupWizardView: View {
             async let personalKey = controller.loadCredential(.personalOpenRouterKey)
             async let workKey = controller.loadCredential(.workOpenRouterKey)
             async let storedProxyToken = controller.loadCredential(.proxyToken)
-            async let storedNgrokAuthtoken = controller.loadCredential(.ngrokAuthtoken)
+            async let storedNgrokAuthtokenTask = controller.loadCredential(.ngrokAuthtoken)
             async let confirmedStaticURL = controller.confirmedStaticURL()
             async let suggestedStaticURL = controller.setupStaticURLSuggestion()
 
             let loadedPersonalKey = try await personalKey
             let loadedWorkKey = try await workKey
             let loadedProxyToken = try await storedProxyToken
-            let loadedNgrokAuthtoken = try await storedNgrokAuthtoken
+            let loadedNgrokAuthtoken = try await storedNgrokAuthtokenTask
             let confirmedURL = try await confirmedStaticURL
             let suggestionURL = try await suggestedStaticURL
 
             personalOpenRouterKey = loadedPersonalKey
             workOpenRouterKey = loadedWorkKey
             proxyToken = loadedProxyToken
-            ngrokAuthtoken = loadedNgrokAuthtoken
+            storedNgrokAuthtoken = loadedNgrokAuthtoken
+            ngrokAuthtoken = ""
             ngrokStaticURL = (confirmedURL ?? suggestionURL)?.absoluteString ?? ""
             ngrokPublicURL = confirmedURL
         } catch {
@@ -451,6 +468,7 @@ struct SetupWizardView: View {
         workOpenRouterKey = ""
         proxyToken = ""
         ngrokAuthtoken = ""
+        storedNgrokAuthtoken = ""
         ngrokStaticURL = ""
         ngrokPublicURL = nil
     }
@@ -467,7 +485,9 @@ struct SetupWizardView: View {
             currentStep = .modelRouting
         case .modelRouting:
             currentStep = .support
+            NSSound(named: NSSound.Name("Glass"))?.play()
         case .support:
+            dismiss()
             controller.completeSetupWizard()
         }
     }
@@ -498,8 +518,9 @@ struct SetupWizardView: View {
             }
 
             do {
+                let authtoken = effectiveNgrokAuthtoken
                 let setupResult = try await controller.setupNgrok(
-                    authtoken: ngrokAuthtoken,
+                    authtoken: authtoken,
                     staticURL: ngrokStaticURL
                 ) { phase in
                     ngrokSetupPhase = phase
@@ -509,12 +530,13 @@ struct SetupWizardView: View {
                     personalOpenRouterKey: personalOpenRouterKey,
                     workOpenRouterKey: workOpenRouterKey,
                     proxyToken: setupResult.proxyToken,
-                    ngrokAuthtoken: ngrokAuthtoken,
+                    ngrokAuthtoken: authtoken,
                     ngrokStaticURL: normalizedStaticURL
                 )
                 ngrokPublicURL = setupResult.publicURL
                 ngrokStaticURL = normalizedStaticURL
                 proxyToken = setupResult.proxyToken
+                controller.recordSuccessfulSetup()
                 currentStep = .cursor
             } catch {
                 ngrokPublicURL = nil

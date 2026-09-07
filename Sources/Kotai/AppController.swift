@@ -109,6 +109,13 @@ final class AppController {
         shouldShowSetupWizard = false
     }
 
+    static let successfulSetupRuntimeStatus = RuntimeStatus.running
+
+    func recordSuccessfulSetup() {
+        isSetupRequired = false
+        runtimeStatus = Self.successfulSetupRuntimeStatus
+    }
+
     func loadCredential(
         _ credential: ProxyConfiguration.Credential
     ) async throws -> String {

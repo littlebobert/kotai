@@ -224,6 +224,12 @@ struct SecureStoreTests {
         #expect(message.contains("Allow Keychain access"))
     }
 
+    @Test @MainActor
+    func successfulSetupUsesConnectedRuntimeStatus() {
+        #expect(AppController.successfulSetupRuntimeStatus == .running)
+        #expect(AppController.successfulSetupRuntimeStatus.displayName == "Connected")
+    }
+
     @Test
     func testHostDoesNotStartRuntimeServices() {
         #expect(!ApplicationLaunchEnvironment.shouldStartRuntime(environment: ["KOTAI_RUNNING_TESTS": "1"]))
