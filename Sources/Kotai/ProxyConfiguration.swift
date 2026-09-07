@@ -1,15 +1,38 @@
 import Foundation
 
 actor ProxyConfiguration {
-    enum Credential: String, CaseIterable {
-        case ngrokAuthtoken = "ngrok-authtoken"
-        case ngrokStaticURL = "ngrok-static-url"
-        case personalOpenRouterKey = "personal-openrouter-key"
-        case proxyToken = "proxy-token"
-        case workOpenRouterKey = "work-openrouter-key"
-    }
+    enum Credential: CaseIterable {
+        case ngrokAuthtoken
+        case ngrokStaticURL
+        case personalOpenRouterKey
+        case proxyToken
+        case workOpenRouterKey
 
-    private static let vaultAccount = "credential-vault-v1"
+        var rawValue: String {
+            storageAccount.name
+        }
+
+        init?(rawValue: String) {
+            guard
+                let credential = Self.allCases.first(where: {
+                    $0.rawValue == rawValue
+                })
+            else {
+                return nil
+            }
+            self = credential
+        }
+
+        private var storageAccount: SecureStore.Account {
+            switch self {
+            case .ngrokAuthtoken: .ngrokAuthtoken
+            case .ngrokStaticURL: .ngrokStaticURL
+            case .personalOpenRouterKey: .personalOpenRouterKey
+            case .proxyToken: .proxyToken
+            case .workOpenRouterKey: .workOpenRouterKey
+            }
+        }
+    }
 
     private let secureStore: SecureStore
     private var credentialCache: [Credential: String]?
@@ -78,7 +101,7 @@ actor ProxyConfiguration {
     private func decodeCredentials(
         from items: [String: String]
     ) throws -> [Credential: String] {
-        if let storedVault = items[Self.vaultAccount] {
+        if let storedVault = items[SecureStore.Account.vault.name] {
             let data = Data(storedVault.utf8)
             let storedCredentials = try JSONDecoder().decode(
                 [String: String].self,
@@ -118,6 +141,9 @@ actor ProxyConfiguration {
         guard let value = String(data: data, encoding: .utf8) else {
             throw SecureStoreError.invalidStoredValue
         }
-        try secureStore.write(value, account: Self.vaultAccount)
+        try secureStore.write(
+            value,
+            account: SecureStore.Account.vault.name
+        )
     }
 }

@@ -118,6 +118,8 @@
 "Saved" = "Saved";
 "Connecting…" = "Connecting…";
 "Keychain returned status %lld." = "Keychain returned status %lld.";
+"Keychain error: %@ (status %lld)." = "Keychain error: %@ (status %lld).";
+"Unknown Keychain error" = "Unknown Keychain error";
 "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai." = "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai.";
 "The stored Keychain value is not valid UTF-8." = "The stored Keychain value is not valid UTF-8.";
 "Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies." = "Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies.";

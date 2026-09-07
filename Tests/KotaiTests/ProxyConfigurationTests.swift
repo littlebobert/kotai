@@ -235,7 +235,7 @@ struct ProxyConfigurationMigrationTests {
         #expect(backend.deleteCount == 0)
         #expect(backend.items(serviceName: SecureStore.legacyVaultService)["credential-vault-v1"] == legacyVault)
         #expect(try await configuration.credential(.workOpenRouterKey) == "work")
-        #expect(backend.readServices.count == 2)
+        #expect(backend.reads.count == 2)
     }
 
     @Test
@@ -256,6 +256,46 @@ struct ProxyConfigurationMigrationTests {
         }
         #expect(backend.writes.isEmpty)
         #expect(backend.deleteCount == 0)
+    }
+
+    @Test
+    func denialDuringHistoricalFallbackDoesNotWritePartialVault() async {
+        let denial = SecureStoreError.accessDenied(errSecInteractionNotAllowed)
+        let backend = FakeSecureStoreBackend(
+            itemsByService: [
+                SecureStore.priorLegacyService: [
+                    "ngrok-authtoken": "ngrok",
+                    "personal-openrouter-key": "personal",
+                    "work-openrouter-key": "work",
+                ],
+            ],
+            readErrorByServiceAndAccount: [
+                SecureStore.priorLegacyService: ["proxy-token": denial],
+            ]
+        )
+        let configuration = ProxyConfiguration(
+            secureStore: SecureStore(backend: backend)
+        )
+
+        do {
+            _ = try await configuration.credential(.personalOpenRouterKey)
+            Issue.record("Expected denied historical access to throw")
+        } catch let error as SecureStoreError {
+            #expect(error == denial)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+
+        #expect(backend.writes.isEmpty)
+        #expect(backend.deleteCount == 0)
+        #expect(
+            backend.items(serviceName: SecureStore.productionService).isEmpty
+        )
+        #expect(
+            backend.items(serviceName: SecureStore.priorLegacyService)[
+                "personal-openrouter-key"
+            ] == "personal"
+        )
     }
 
     @Test
@@ -293,9 +333,10 @@ struct ProxyConfigurationMigrationTests {
         #expect(updatedVault["personal-openrouter-key"] == "personal")
         #expect(updatedVault["work-openrouter-key"] == "work")
         #expect(updatedVault["proxy-token"] == "new-proxy")
-        #expect(backend.readServices == [
+        #expect(backend.reads.map(\.serviceName) == [
             SecureStore.productionService,
             SecureStore.legacyVaultService,
+            SecureStore.priorLegacyService,
             SecureStore.priorLegacyService,
         ])
     }

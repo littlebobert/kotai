@@ -118,6 +118,8 @@
 "Saved" = "保存済み";
 "Connecting…" = "接続中…";
 "Keychain returned status %lld." = "キーチェーンからステータス%lldが返されました。";
+"Keychain error: %@ (status %lld)." = "キーチェーンエラー：%@（ステータス%lld）。";
+"Unknown Keychain error" = "不明なキーチェーンエラー";
 "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai." = "Kotaiは保存済みの認証情報にアクセスできませんでした。キーチェーンの確認画面で「常に許可」を選び、Kotaiを再起動してください。";
 "The stored Keychain value is not valid UTF-8." = "キーチェーンに保存された値の形式が正しくありません。";
 "Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies." = "診断ログと最近のテレメトリが添付されます。APIキー、認証トークン、プロンプト、レスポンス本文は含まれません。";
