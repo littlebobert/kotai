@@ -34,7 +34,7 @@ struct SettingsView: View {
             TabView {
                 accountsTab
                     .tabItem {
-                        Label("Setups", systemImage: "person.2")
+                        Label("Keys", systemImage: "person.2")
                     }
 
                 routingTab
@@ -67,7 +67,7 @@ struct SettingsView: View {
 
     private var accountsTab: some View {
         tabContent {
-            GroupBox("OpenRouter accounts") {
+            GroupBox("OpenRouter setups") {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(
                         "Kotai keeps these in this Mac's Keychain. Every model-bearing request must select a key with a kotai/personal/ or kotai/work/ prefix."
@@ -122,6 +122,7 @@ struct SettingsView: View {
                         )
 
                         HStack {
+                            CopyButton(value: proxyToken, label: "Copy")
                             Button("Regenerate") {
                                 isConfirmingTokenRegeneration = true
                             }
@@ -138,7 +139,6 @@ struct SettingsView: View {
                                     "Regenerating this token requires updating every connected client."
                                 )
                             }
-                            CopyButton(value: proxyToken, label: "Copy")
                             Spacer()
                         }
                     }
@@ -172,7 +172,7 @@ struct SettingsView: View {
                             restartNgrokIfAvailable()
                         }
 
-                        StaticURLPrompt.example
+                        Text("For example: your-static-ngrok-identifier.ngrok-free.dev")
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                         Text(connectionDraft.validationError ?? " ")
@@ -220,7 +220,7 @@ struct SettingsView: View {
                     )
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Button("Reconnect ngrok…") {
+                    Button("Start Setup Wizard again…") {
                         controller.beginSetupWizard()
                     }
                 }

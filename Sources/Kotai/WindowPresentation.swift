@@ -25,93 +25,156 @@ func presentSettingsWindow(openSettings: OpenSettingsAction) {
             expectedTitles.contains(window.title)
         }
         settingsWindow?.makeKeyAndOrderFront(nil)
-        WindowActivationCoordinator.shared.observeClosing(of: settingsWindow)
     }
 }
 
 @MainActor
-func presentAboutWindow(openWindow: OpenWindowAction) {
-    presentWindow(
-        id: "about",
-        title: String(localized: "About Kotai"),
-        centersWindow: true,
-        openWindow: openWindow
-    )
+final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
+    private var aboutWindowController: AboutWindowController?
+    private var diagnosticsWindowController: DiagnosticsWindowController?
+    private weak var controller: AppController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApplication.shared.setActivationPolicy(.regular)
+    }
+
+    func applicationShouldHandleReopen(
+        _ sender: NSApplication,
+        hasVisibleWindows flag: Bool
+    ) -> Bool {
+        presentDiagnostics()
+        return true
+    }
+
+    func configure(controller: AppController) {
+        guard self.controller !== controller else {
+            return
+        }
+        self.controller = controller
+        diagnosticsWindowController = DiagnosticsWindowController(
+            controller: controller
+        )
+    }
+
+    func presentAbout() {
+        if aboutWindowController == nil {
+            aboutWindowController = AboutWindowController()
+        }
+        aboutWindowController?.present()
+    }
+
+    func presentDiagnostics() {
+        guard let controller else {
+            return
+        }
+        if diagnosticsWindowController == nil {
+            diagnosticsWindowController = DiagnosticsWindowController(
+                controller: controller
+            )
+        }
+        diagnosticsWindowController?.present()
+    }
 }
 
 @MainActor
-func presentDiagnosticsWindow(openWindow: OpenWindowAction) {
-    presentWindow(
-        id: "diagnostics",
-        title: String(localized: "Kotai Diagnostics"),
-        openWindow: openWindow
-    )
+private final class AboutWindowController: NSWindowController {
+    init() {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 250),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = String(localized: "About Kotai")
+        configureCenteredTitle(
+            String(localized: "About Kotai"),
+            in: window
+        )
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(rootView: AboutView())
+        super.init(window: window)
+    }
+
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    func present() {
+        guard let window else {
+            return
+        }
+        activateApplication()
+        window.center()
+        showWindow(nil)
+        window.makeKeyAndOrderFront(nil)
+    }
 }
 
 @MainActor
-private func presentWindow(
-    id: String,
-    title: String,
-    centersWindow: Bool = false,
-    openWindow: OpenWindowAction
-) {
+private final class DiagnosticsWindowController: NSWindowController {
+    init(controller: AppController) {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 460),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = String(localized: "Kotai Diagnostics")
+        configureCenteredTitle(
+            String(localized: "Kotai Diagnostics"),
+            in: window
+        )
+        window.minSize = NSSize(width: 560, height: 360)
+        window.isReleasedWhenClosed = false
+        window.contentView = NSHostingView(
+            rootView: DiagnosticsView(controller: controller)
+        )
+        super.init(window: window)
+    }
+
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    func present() {
+        guard let window else {
+            return
+        }
+        activateApplication()
+        showWindow(nil)
+        window.makeKeyAndOrderFront(nil)
+    }
+}
+
+@MainActor
+private func configureCenteredTitle(_ title: String, in window: NSWindow) {
+    window.titleVisibility = .hidden
+    window.titlebarSeparatorStyle = .none
+
+    guard
+        let closeButton = window.standardWindowButton(.closeButton),
+        let titlebarView = closeButton.superview
+    else {
+        return
+    }
+
+    let titleLabel = NSTextField(labelWithString: title)
+    titleLabel.font = .systemFont(
+        ofSize: NSFont.systemFontSize,
+        weight: .semibold
+    )
+    titleLabel.alignment = .center
+    titleLabel.translatesAutoresizingMaskIntoConstraints = false
+    titlebarView.addSubview(titleLabel)
+    NSLayoutConstraint.activate([
+        titleLabel.centerXAnchor.constraint(equalTo: titlebarView.centerXAnchor),
+        titleLabel.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
+    ])
+}
+
+@MainActor
+private func activateApplication() {
     NSApplication.shared.setActivationPolicy(.regular)
     NSApplication.shared.activate(ignoringOtherApps: true)
     NSRunningApplication.current.activate(options: [.activateAllWindows])
-    openWindow(id: id)
-
-    Task { @MainActor in
-        try? await Task.sleep(for: .milliseconds(150))
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        NSRunningApplication.current.activate(
-            options: [.activateAllWindows]
-        )
-
-        let presentedWindow = NSApplication.shared.windows.first { window in
-            window.title == title
-        }
-        if centersWindow {
-            presentedWindow?.center()
-        }
-        presentedWindow?.makeKeyAndOrderFront(nil)
-        WindowActivationCoordinator.shared.observeClosing(of: presentedWindow)
-    }
-}
-
-@MainActor
-private final class WindowActivationCoordinator: NSObject {
-    static let shared = WindowActivationCoordinator()
-
-    private weak var observedWindow: NSWindow?
-
-    func observeClosing(of window: NSWindow?) {
-        guard observedWindow !== window else {
-            return
-        }
-
-        if let observedWindow {
-            NotificationCenter.default.removeObserver(
-                self,
-                name: NSWindow.willCloseNotification,
-                object: observedWindow
-            )
-        }
-
-        observedWindow = window
-
-        if let window {
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(windowWillClose),
-                name: NSWindow.willCloseNotification,
-                object: window
-            )
-        }
-    }
-
-    @objc
-    private func windowWillClose() {
-        NSApplication.shared.setActivationPolicy(.accessory)
-        observedWindow = nil
-    }
 }

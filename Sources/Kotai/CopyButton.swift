@@ -33,7 +33,7 @@ struct CopyButton: View {
     @ViewBuilder
     private var buttonLabel: some View {
         if compact {
-            ZStack {
+            ZStack(alignment: reservedAlignment) {
                 Label("Copied", systemImage: "checkmark")
                     .labelStyle(.titleAndIcon)
                     .hidden()

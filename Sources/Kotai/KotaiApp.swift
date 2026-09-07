@@ -3,13 +3,14 @@ import SwiftUI
 
 @main
 struct KotaiApp: App {
+    @NSApplicationDelegateAdaptor(KotaiAppDelegate.self) private var appDelegate
     @State private var controller = AppController()
 
     var body: some Scene {
         MenuBarExtra {
-            MenuBarContent(controller: controller)
+            MenuBarContent(controller: controller, appDelegate: appDelegate)
         } label: {
-            MenuBarLabel(controller: controller)
+            MenuBarLabel(controller: controller, appDelegate: appDelegate)
         }
         .commands {
             NativeEditingCommands()
@@ -22,23 +23,13 @@ struct KotaiApp: App {
                 SettingsView(controller: controller)
             }
         }
-
-        Window("About Kotai", id: "about") {
-            AboutView()
-        }
-        .windowResizability(.contentSize)
-
-        Window("Kotai Diagnostics", id: "diagnostics") {
-            DiagnosticsView(controller: controller)
-        }
-        .windowResizability(.contentSize)
     }
 }
 
 private struct MenuBarContent: View {
     let controller: AppController
+    let appDelegate: KotaiAppDelegate
 
-    @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
@@ -54,11 +45,11 @@ private struct MenuBarContent: View {
         .keyboardShortcut(",")
 
         Button("Diagnostics…") {
-            presentDiagnosticsWindow(openWindow: openWindow)
+            appDelegate.presentDiagnostics()
         }
 
         Button("About Kotai…") {
-            presentAboutWindow(openWindow: openWindow)
+            appDelegate.presentAbout()
         }
 
         Button("Check for Updates…") {
@@ -83,6 +74,7 @@ enum ApplicationLaunchEnvironment {
 
 private struct MenuBarLabel: View {
     let controller: AppController
+    let appDelegate: KotaiAppDelegate
 
     @Environment(\.openSettings) private var openSettings
     @State private var hasStarted = false
@@ -102,6 +94,7 @@ private struct MenuBarLabel: View {
                 return
             }
             hasStarted = true
+            appDelegate.configure(controller: controller)
             controller.start()
         }
         .onChange(of: controller.isSetupRequired, initial: true) {

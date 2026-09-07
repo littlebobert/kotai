@@ -164,6 +164,14 @@ struct ProxyConfigurationTests {
 
 
     @Test
+    func diagnosticLogLevelPrefixesUseFourCharacters() {
+        let prefixes = KotaiLogger.Level.allCases.map(\.rawValue)
+
+        #expect(prefixes == ["DEBG", "ERRO", "INFO", "WARN"])
+        #expect(prefixes.allSatisfy { $0.count == 4 })
+    }
+
+    @Test
     func diagnosticRedactionRemovesCredentialsFromCommonLogFormats() {
         let secrets = [
             "sk-or-v1-openrouterSecret123",

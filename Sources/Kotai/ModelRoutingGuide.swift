@@ -47,7 +47,13 @@ struct ModelRoutingGuide: View {
 
                 Spacer(minLength: 0)
 
-                CopyButton(value: value, label: "Copy", compact: true)
+                CopyButton(
+                    value: value,
+                    label: "Copy",
+                    compact: true,
+                    reservedWidth: 24,
+                    reservedAlignment: .trailing
+                )
             }
             .padding(8)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 7))

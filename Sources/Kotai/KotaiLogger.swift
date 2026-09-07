@@ -1,9 +1,9 @@
 import Foundation
 
 final class KotaiLogger: @unchecked Sendable {
-    enum Level: String {
-        case debug = "DEBUG"
-        case error = "ERROR"
+    enum Level: String, CaseIterable {
+        case debug = "DEBG"
+        case error = "ERRO"
         case info = "INFO"
         case warning = "WARN"
     }
