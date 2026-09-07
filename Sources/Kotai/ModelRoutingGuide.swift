@@ -55,7 +55,8 @@ struct ModelRoutingGuide: View {
                     reservedAlignment: .trailing
                 )
             }
-            .padding(8)
+            .padding(.horizontal, 8)
+            .frame(height: 38)
             .background(.quaternary, in: RoundedRectangle(cornerRadius: 7))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
