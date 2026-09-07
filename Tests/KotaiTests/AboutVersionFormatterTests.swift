@@ -3,21 +3,21 @@ import Testing
 
 struct AboutVersionFormatterTests {
     @Test
-    func formatsVersionAndBuild() {
+    func formatsVersionWithoutBuildNumber() {
         #expect(
-            AboutVersionFormatter.displayText(version: "0.1.6", build: "7")
-                == "Version 0.1.6 (7)"
+            AboutVersionFormatter.displayText(version: "0.1.6")
+                == "Version 0.1.6"
         )
     }
 
     @Test
-    func reportsUnavailableVersionWhenEitherValueIsMissing() {
+    func reportsUnavailableVersionWhenVersionIsMissing() {
         #expect(
-            AboutVersionFormatter.displayText(version: nil, build: "7")
+            AboutVersionFormatter.displayText(version: nil)
                 == "Version unavailable"
         )
         #expect(
-            AboutVersionFormatter.displayText(version: "0.1.6", build: " ")
+            AboutVersionFormatter.displayText(version: " ")
                 == "Version unavailable"
         )
     }

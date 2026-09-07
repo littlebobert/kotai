@@ -6,7 +6,7 @@ struct AboutView: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            KotaiIconView(size: 64)
+            KotaiIconView(size: 56)
 
             VStack(spacing: 2) {
                 Text("Kotai")
@@ -26,7 +26,6 @@ struct AboutView: View {
                 destination: URL(string: "https://kotai.jp/")!
             )
             .font(.callout)
-            .underline()
 
             Button("Report a bug…") {
                 BugReporter.composeEmail()
@@ -36,6 +35,12 @@ struct AboutView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 18)
         .frame(width: 320)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("About Kotai")
+                    .font(.headline)
+            }
+        }
     }
 }
 
@@ -44,25 +49,18 @@ enum AboutVersionFormatter {
         displayText(
             version: bundle.object(
                 forInfoDictionaryKey: "CFBundleShortVersionString"
-            ) as? String,
-            build: bundle.object(
-                forInfoDictionaryKey: "CFBundleVersion"
             ) as? String
         )
     }
 
-    static func displayText(version: String?, build: String?) -> String {
+    static func displayText(version: String?) -> String {
         let normalizedVersion = version?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedBuild = build?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let normalizedVersion, !normalizedVersion.isEmpty,
-              let normalizedBuild, !normalizedBuild.isEmpty
-        else {
+        guard let normalizedVersion, !normalizedVersion.isEmpty else {
             return String(localized: "Version unavailable")
         }
         return String(
-            format: String(localized: "Version %@ (%@)"),
-            normalizedVersion,
-            normalizedBuild
+            format: String(localized: "Version %@"),
+            normalizedVersion
         )
     }
 }
