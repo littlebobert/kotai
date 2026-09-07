@@ -18,6 +18,7 @@
 		33895FACE57F4018787756AD /* SecretSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF8B8C27457E381980F32ED /* SecretSummary.swift */; };
 		3686A399252CD0904E05455C /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64F440FC8B3881754594CA6 /* AboutView.swift */; };
 		415586939DD6DB06796A741C /* OpenRouterProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19EA941663E7F39DB8D2B6D /* OpenRouterProxy.swift */; };
+		463DA619C43F58C5E79D8748 /* AboutVersionFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1B395A35531778D19C535C /* AboutVersionFormatterTests.swift */; };
 		46A04F21277425D4EBF1E02E /* CopyButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE70C569EE2A0B32C553C4F5 /* CopyButton.swift */; };
 		4C277BC1773FE0869759E4CE /* KotaiIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC116EBFFDB4C0EE879AA4D0 /* KotaiIcon.swift */; };
 		4E325A959BD2A91458D23CF2 /* WindowTitleSetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DB1337A9AC61333292487D /* WindowTitleSetter.swift */; };
@@ -41,6 +42,7 @@
 		A612D4132823FC35F899F459 /* WindowPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */; };
 		B3F9E9F31F804300AD9948CC /* NIOHTTPTypesHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = 0BF8F9EC5F585B6BDE6A3108 /* NIOHTTPTypesHTTP1 */; };
 		B65669C60CB1727CCBDE3F6B /* SecureStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 807102C971665B3FF885D415 /* SecureStoreTests.swift */; };
+		BE634071DAAF7AB93E49B831 /* ProductionFixtureIsolationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FFAB107DF4693C8C13FB60 /* ProductionFixtureIsolationTests.swift */; };
 		C10269FDAB590DFD16A4DEBF /* NgrokStaticURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D99EB0992FF1958EC2E23FB5 /* NgrokStaticURLTests.swift */; };
 		C48750E97CE9EE5C5C87E2B0 /* AsyncHTTPClient in Frameworks */ = {isa = PBXBuildFile; productRef = 135F01D9E13FA65D326CE5E7 /* AsyncHTTPClient */; };
 		D1C709771B0F8640F78D0B24 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 29ABF4D8F56232121C4C2B2D /* Sparkle */; };
@@ -62,6 +64,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		09FFAB107DF4693C8C13FB60 /* ProductionFixtureIsolationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductionFixtureIsolationTests.swift; sourceTree = "<group>"; };
 		0DC47203173F63EBEB0237DB /* SecretSummaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretSummaryTests.swift; sourceTree = "<group>"; };
 		196E30AEC591A52F38C65137 /* ModelRoutingGuide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelRoutingGuide.swift; sourceTree = "<group>"; };
 		1C0E8FF3D4657210C14EDF65 /* Kotai.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Kotai.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -93,6 +96,7 @@
 		D1466CD2DA8612C82AC292AF /* ProxyConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProxyConfigurationTests.swift; sourceTree = "<group>"; };
 		D174DFA80CA80EC82CE9B451 /* WindowPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPresentation.swift; sourceTree = "<group>"; };
 		D99EB0992FF1958EC2E23FB5 /* NgrokStaticURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NgrokStaticURLTests.swift; sourceTree = "<group>"; };
+		DC1B395A35531778D19C535C /* AboutVersionFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutVersionFormatterTests.swift; sourceTree = "<group>"; };
 		E28F258AA806F7313BA2B95D /* AutoUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoUpdateService.swift; sourceTree = "<group>"; };
 		E64F440FC8B3881754594CA6 /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		EF1880E039C556A185C392E2 /* NativeEditingCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeEditingCommands.swift; sourceTree = "<group>"; };
@@ -131,8 +135,10 @@
 		45B08B24791CAFF254453378 /* KotaiTests */ = {
 			isa = PBXGroup;
 			children = (
+				DC1B395A35531778D19C535C /* AboutVersionFormatterTests.swift */,
 				D99EB0992FF1958EC2E23FB5 /* NgrokStaticURLTests.swift */,
 				583CCCA5CE30281FF8ACAF0A /* OpenRouterRequestRouterTests.swift */,
+				09FFAB107DF4693C8C13FB60 /* ProductionFixtureIsolationTests.swift */,
 				D1466CD2DA8612C82AC292AF /* ProxyConfigurationTests.swift */,
 				0DC47203173F63EBEB0237DB /* SecretSummaryTests.swift */,
 				807102C971665B3FF885D415 /* SecureStoreTests.swift */,
@@ -273,7 +279,7 @@
 				TargetAttributes = {
 					26387622D0477178BF6B91C4 = {
 						DevelopmentTeam = XDWKSAH7W3;
-						ProvisioningStyle = Manual;
+						ProvisioningStyle = Automatic;
 					};
 					3E2D0F8A3FE4244DB3BE4012 = {
 						DevelopmentTeam = XDWKSAH7W3;
@@ -359,8 +365,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				463DA619C43F58C5E79D8748 /* AboutVersionFormatterTests.swift in Sources */,
 				C10269FDAB590DFD16A4DEBF /* NgrokStaticURLTests.swift in Sources */,
 				63B7A25AAF10256D03AA9323 /* OpenRouterRequestRouterTests.swift in Sources */,
+				BE634071DAAF7AB93E49B831 /* ProductionFixtureIsolationTests.swift in Sources */,
 				31FD8C72876F9E7A838A7967 /* ProxyConfigurationTests.swift in Sources */,
 				27015E22B549F054CB5A4713 /* SecretSummaryTests.swift in Sources */,
 				B65669C60CB1727CCBDE3F6B /* SecureStoreTests.swift in Sources */,
@@ -394,12 +402,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = XDWKSAH7W3;
-				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/Kotai/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -417,8 +424,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 7;
+				DEVELOPMENT_TEAM = XDWKSAH7W3;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/Kotai/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

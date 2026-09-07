@@ -120,3 +120,11 @@
 "Keychain returned status %lld." = "キーチェーンからステータス%lldが返されました。";
 "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai." = "Kotaiは保存済みの認証情報にアクセスできませんでした。キーチェーンの確認画面で「常に許可」を選び、Kotaiを再起動してください。";
 "The stored Keychain value is not valid UTF-8." = "キーチェーンに保存された値の形式が正しくありません。";
+"Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies." = "診断ログと最近のテレメトリが添付されます。APIキー、認証トークン、プロンプト、レスポンス本文は含まれません。";
+"Example: example.ngrok.app or https://example.ngrok.app" = "例：example.ngrok.app または https://example.ngrok.app";
+"If you have issues, report a bug." = "問題がある場合は、バグを報告してください。";
+"Paste your ngrok static domain or HTTPS URL" = "ngrokの固定ドメインまたはHTTPS URLを貼り付け";
+"Report a bug" = "バグを報告";
+"Support" = "サポート";
+"Version %@ (%@)" = "バージョン %@（%@）";
+"Version unavailable" = "バージョン情報なし";

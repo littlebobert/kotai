@@ -6,6 +6,7 @@ struct SetupWizardView: View {
         case ngrok
         case cursor
         case modelRouting
+        case support
 
         var title: String {
             switch self {
@@ -17,6 +18,8 @@ struct SetupWizardView: View {
                 String(localized: "Connect clients")
             case .modelRouting:
                 String(localized: "Model routing")
+            case .support:
+                String(localized: "Support")
             }
         }
     }
@@ -35,6 +38,7 @@ struct SetupWizardView: View {
     @State private var isLoading = true
     @State private var isSaving = false
     @State private var credentialLoadFailed = false
+    @FocusState private var isNgrokStaticURLFocused: Bool
 
     private var cursorBaseURL: String {
         baseURL(appendingPath: "cursor/v1")
@@ -75,6 +79,8 @@ struct SetupWizardView: View {
                             EmptyView()
                         case .modelRouting:
                             modelRoutingStep
+                        case .support:
+                            supportStep
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -178,6 +184,15 @@ struct SetupWizardView: View {
                     prompt: StaticURLPrompt.fieldPrompt
                 )
                 .textFieldStyle(.roundedBorder)
+                .focused($isNgrokStaticURLFocused)
+                .onChange(of: isNgrokStaticURLFocused) { _, isFocused in
+                    if !isFocused {
+                        normalizeNgrokStaticURLDraft()
+                    }
+                }
+                StaticURLPrompt.example
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
                 underlinedLink(
                     "Get your ngrok static domain",
                     destination: URL(string: "https://dashboard.ngrok.com/domains")!
@@ -235,6 +250,31 @@ struct SetupWizardView: View {
         }
     }
 
+    private var supportStep: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Image(systemName: "lifepreserver.fill")
+                .font(.system(size: 42))
+                .foregroundStyle(.tint)
+                .accessibilityHidden(true)
+
+            stepTitle(
+                "Support",
+                detail: "If you have issues, report a bug."
+            )
+
+            Button("Report a bug") {
+                BugReporter.composeEmail()
+            }
+            .buttonStyle(.link)
+            .underline()
+
+            Text("Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private var footer: some View {
         HStack {
             if currentStep != .openRouter {
@@ -272,7 +312,7 @@ struct SetupWizardView: View {
     }
 
     private var continueButtonTitle: String {
-        if currentStep == .modelRouting {
+        if currentStep == .support {
             return String(localized: "Finish")
         }
         if currentStep == .ngrok, isSaving {
@@ -292,7 +332,7 @@ struct SetupWizardView: View {
         case .ngrok:
             return !ngrokAuthtoken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 && !ngrokStaticURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        case .cursor, .modelRouting:
+        case .cursor, .modelRouting, .support:
             return true
         }
     }
@@ -386,18 +426,33 @@ struct SetupWizardView: View {
             async let confirmedStaticURL = controller.confirmedStaticURL()
             async let suggestedStaticURL = controller.setupStaticURLSuggestion()
 
-            personalOpenRouterKey = try await personalKey
-            workOpenRouterKey = try await workKey
-            proxyToken = try await storedProxyToken
-            ngrokAuthtoken = try await storedNgrokAuthtoken
+            let loadedPersonalKey = try await personalKey
+            let loadedWorkKey = try await workKey
+            let loadedProxyToken = try await storedProxyToken
+            let loadedNgrokAuthtoken = try await storedNgrokAuthtoken
             let confirmedURL = try await confirmedStaticURL
             let suggestionURL = try await suggestedStaticURL
+
+            personalOpenRouterKey = loadedPersonalKey
+            workOpenRouterKey = loadedWorkKey
+            proxyToken = loadedProxyToken
+            ngrokAuthtoken = loadedNgrokAuthtoken
             ngrokStaticURL = (confirmedURL ?? suggestionURL)?.absoluteString ?? ""
             ngrokPublicURL = confirmedURL
         } catch {
+            clearLoadedValues()
             credentialLoadFailed = true
             errorMessage = error.localizedDescription
         }
+    }
+
+    private func clearLoadedValues() {
+        personalOpenRouterKey = ""
+        workOpenRouterKey = ""
+        proxyToken = ""
+        ngrokAuthtoken = ""
+        ngrokStaticURL = ""
+        ngrokPublicURL = nil
     }
 
     private func advance() {
@@ -411,6 +466,8 @@ struct SetupWizardView: View {
         case .cursor:
             currentStep = .modelRouting
         case .modelRouting:
+            currentStep = .support
+        case .support:
             controller.completeSetupWizard()
         }
     }
@@ -420,6 +477,13 @@ struct SetupWizardView: View {
             return
         }
         currentStep = previousStep
+    }
+
+    private func normalizeNgrokStaticURLDraft() {
+        guard let normalizedURL = try? NgrokStaticURL(ngrokStaticURL) else {
+            return
+        }
+        ngrokStaticURL = normalizedURL.absoluteString
     }
 
     private func setupNgrok() {

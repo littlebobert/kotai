@@ -3,7 +3,9 @@ import Security
 
 enum SecureStoreError: LocalizedError, Equatable {
     enum StatusClassification: Equatable {
+        case success
         case itemNotFound
+        case duplicateItem
         case accessDenied
         case otherFailure
     }
@@ -14,21 +16,18 @@ enum SecureStoreError: LocalizedError, Equatable {
 
     static func classify(_ status: OSStatus) -> StatusClassification {
         switch status {
-        case errSecItemNotFound:
-            .itemNotFound
-        case errSecAuthFailed, errSecUserCanceled, errSecInteractionNotAllowed:
-            .accessDenied
-        default:
-            .otherFailure
+        case errSecSuccess: .success
+        case errSecItemNotFound: .itemNotFound
+        case errSecDuplicateItem: .duplicateItem
+        case errSecAuthFailed, errSecUserCanceled, errSecInteractionNotAllowed: .accessDenied
+        default: .otherFailure
         }
     }
 
     static func statusError(_ status: OSStatus) -> SecureStoreError {
         switch classify(status) {
-        case .accessDenied:
-            .accessDenied(status)
-        case .itemNotFound, .otherFailure:
-            .unexpectedStatus(status)
+        case .accessDenied: .accessDenied(status)
+        case .success, .itemNotFound, .duplicateItem, .otherFailure: .unexpectedStatus(status)
         }
     }
 
@@ -37,7 +36,7 @@ enum SecureStoreError: LocalizedError, Equatable {
         case .invalidStoredValue:
             String(localized: "The stored Keychain value is not valid UTF-8.")
         case .accessDenied:
-            String(localized: "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai.")
+            String(localized: "Kotai could not access its saved credentials. Allow Keychain access, then refresh or relaunch Kotai.")
         case .unexpectedStatus(let status):
             SecCopyErrorMessageString(status, nil) as String?
                 ?? String(localized: "Keychain returned status \(status).")
@@ -45,92 +44,124 @@ enum SecureStoreError: LocalizedError, Equatable {
     }
 }
 
+protocol SecureStoreBackend: Sendable {
+    func readItems(service: SecureStore.Service) throws -> [String: String]
+    func write(_ value: String, account: String, service: SecureStore.Service) throws
+    func delete(account: String, service: SecureStore.Service) throws
+}
+
 struct SecureStore: Sendable {
-    static let productionService = "com.justin.Kotai.credentials.v2"
-
-    let service: String
-
-    init(service: String = Self.productionService) {
-        self.service = service
+    struct Service: Equatable, Sendable {
+        let name: String
     }
 
-    // Never query earlier service namespaces: their pre-release ACL can trigger a login Keychain password prompt.
+    static let productionService = "com.justin.Kotai.credentials.v3"
+    static let legacyVaultService = "com.justin.Kotai.credentials.v2"
+    static let priorLegacyService = "com.kotai.credentials"
+    static let production = Service(name: productionService)
+    static let migrationServices = [
+        Service(name: legacyVaultService),
+        Service(name: priorLegacyService),
+    ]
 
-    func read(account: String) throws -> String? {
-        let query = readQuery(account: account)
+    private let backend: any SecureStoreBackend
+    private let service: Service
+    private let legacyServices: [Service]
 
-        var result: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+    init(
+        backend: any SecureStoreBackend = SecurityKeychainBackend(),
+        service: Service = Self.production,
+        legacyServices: [Service] = Self.migrationServices
+    ) {
+        self.backend = backend
+        self.service = service
+        self.legacyServices = legacyServices
+    }
 
-        switch SecureStoreError.classify(status) {
-        case .itemNotFound:
-            return nil
-        case .accessDenied, .otherFailure:
-            guard status == errSecSuccess else {
-                throw SecureStoreError.statusError(status)
-            }
+    func readAllCandidates() throws -> [(service: Service, items: [String: String])] {
+        var candidates = [(service: service, items: try backend.readItems(service: service))]
+        if !candidates[0].items.isEmpty { return candidates }
+        for legacyService in legacyServices {
+            let items = try backend.readItems(service: legacyService)
+            candidates.append((legacyService, items))
+            if !items.isEmpty { return candidates }
         }
-        guard
-            let data = result as? Data,
-            let value = String(data: data, encoding: .utf8)
-        else {
-            throw SecureStoreError.invalidStoredValue
-        }
-
-        return value
+        return candidates
     }
 
     func write(_ value: String, account: String) throws {
-        let data = Data(value.utf8)
-        let query = mutationQuery(account: account)
-        let attributes: [String: Any] = [
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-        ]
-
-        let updateStatus = SecItemUpdate(
-            query as CFDictionary,
-            attributes as CFDictionary
-        )
-
-        if updateStatus == errSecItemNotFound {
-            var newItem = query
-            attributes.forEach { key, value in
-                newItem[key] = value
-            }
-            let addStatus = SecItemAdd(newItem as CFDictionary, nil)
-            guard addStatus == errSecSuccess else {
-                throw SecureStoreError.statusError(addStatus)
-            }
-            return
-        }
-
-        guard updateStatus == errSecSuccess else {
-            throw SecureStoreError.statusError(updateStatus)
-        }
+        try backend.write(value, account: account, service: service)
     }
 
     func delete(account: String) throws {
-        let query = mutationQuery(account: account)
-        let status = SecItemDelete(query as CFDictionary)
-
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw SecureStoreError.statusError(status)
-        }
+        try backend.delete(account: account, service: service)
     }
 
-    func readQuery(account: String) -> [String: Any] {
-        var query = mutationQuery(account: account)
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
+    func readQuery(service: Service? = nil) -> [String: Any] {
+        var query = baseQuery(service: service ?? self.service)
+        query[kSecMatchLimit as String] = kSecMatchLimitAll
+        query[kSecReturnAttributes as String] = true
         query[kSecReturnData as String] = true
         return query
     }
 
-    func mutationQuery(account: String) -> [String: Any] {
+    func mutationQuery(account: String, service: Service? = nil) -> [String: Any] {
+        var query = baseQuery(service: service ?? self.service)
+        query[kSecAttrAccount as String] = account
+        return query
+    }
+
+    private func baseQuery(service: Service) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
+            kSecAttrService as String: service.name,
         ]
+    }
+}
+
+struct SecurityKeychainBackend: SecureStoreBackend {
+    func readItems(service: SecureStore.Service) throws -> [String: String] {
+        let query = SecureStore(service: service).readQuery()
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return [:] }
+        guard status == errSecSuccess else { throw SecureStoreError.statusError(status) }
+        guard let itemDictionaries = result as? [[String: Any]] else { throw SecureStoreError.invalidStoredValue }
+        var items: [String: String] = [:]
+        for itemDictionary in itemDictionaries {
+            guard
+                let account = itemDictionary[kSecAttrAccount as String] as? String,
+                let data = itemDictionary[kSecValueData as String] as? Data,
+                let value = String(data: data, encoding: .utf8)
+            else { throw SecureStoreError.invalidStoredValue }
+            items[account] = value
+        }
+        return items
+    }
+
+    func write(_ value: String, account: String, service: SecureStore.Service) throws {
+        let query = SecureStore(service: service).mutationQuery(account: account)
+        let attributes: [String: Any] = [
+            kSecValueData as String: Data(value.utf8),
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+        ]
+        let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        if updateStatus == errSecSuccess { return }
+        guard updateStatus == errSecItemNotFound else { throw SecureStoreError.statusError(updateStatus) }
+        var newItem = query
+        attributes.forEach { newItem[$0.key] = $0.value }
+        let addStatus = SecItemAdd(newItem as CFDictionary, nil)
+        if addStatus == errSecDuplicateItem {
+            let duplicateUpdateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+            guard duplicateUpdateStatus == errSecSuccess else { throw SecureStoreError.statusError(duplicateUpdateStatus) }
+            return
+        }
+        guard addStatus == errSecSuccess else { throw SecureStoreError.statusError(addStatus) }
+    }
+
+    func delete(account: String, service: SecureStore.Service) throws {
+        let query = SecureStore(service: service).mutationQuery(account: account)
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw SecureStoreError.statusError(status) }
     }
 }

@@ -50,13 +50,23 @@ On first launch, the setup wizard asks for:
 - Your assigned static dev URL from [ngrok Domains](https://dashboard.ngrok.com/domains), such as `https://example.ngrok.app`
 - A generated Kotai proxy token
 
-Pre-release and debug builds used an incompatible Keychain namespace. Current
-signed builds intentionally use a new stable namespace and do not read those
-older items, so users upgrading from those builds enter their credentials once.
-If macOS prompts for the old `com.kotai.credentials` item, deny or cancel the
-prompt and complete setup in the new app.
+Kotai stores credentials in the ordinary file-based macOS Keychain, matching the
+Kehai/Sasu approach, as one JSON vault under the fresh service
+`com.justin.Kotai.credentials.v3` with `AfterFirstUnlockThisDeviceOnly`
+accessibility. On first access after upgrading, Kotai checks `v3` once, then checks
+the legacy `com.justin.Kotai.credentials.v2` and `com.kotai.credentials` services
+once each until it finds data. It copies the first complete decoded vault to `v3`
+in one atomic write. A denied or cancelled Keychain request, or an invalid legacy
+vault, stops migration and remains an access/error state rather than appearing as
+missing setup. Legacy items are intentionally retained after a successful copy for
+rollback safety; all subsequent reads and writes use `v3`.
 
-Kotai stores the confirmed static URL and starts ngrok with `--url` on every launch,
+The confirmed static ngrok URL is non-secret but travels in the complete vault so
+migration and settings updates remain atomic. `UserDefaults` retains only the
+non-secret last-known/legacy ngrok URL used as a setup suggestion; secrets are never
+stored there. OpenRouter keys, the ngrok authtoken, and the Kotai proxy token remain
+in Keychain. Kotai starts
+ngrok with `--url` on every launch,
 guaranteeing the same client base URL. Users upgrading from a version before static URL
 configuration are prompted once, with their previously discovered URL prefilled for
 confirmation.
@@ -165,11 +175,15 @@ For compatibility, `https://littlebobert.github.io/kotai-appcast.xml` remains
 served for 0.1.0 clients. The next higher build bridges those clients to the
 custom-domain feed.
 
-Build and sign the arm64 application bundle with hardened runtime:
+Build and sign the arm64 application bundle with hardened runtime using the existing
+Developer ID Application certificate for team `XDWKSAH7W3`:
 
 ```bash
 ./Scripts/build-release.sh
 ```
+
+The ordinary macOS Keychain approach requires no provisioning profile, Keychain
+Sharing access group, or application entitlement setup.
 
 The app is produced at
 `.build/ReleaseDerivedData/Build/Products/Release/Kotai.app`. Submit it for

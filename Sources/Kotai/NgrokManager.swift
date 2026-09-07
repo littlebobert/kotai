@@ -13,11 +13,34 @@ struct NgrokStaticURL: Equatable, Sendable {
 
     init(_ rawValue: String) throws {
         let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedValue.isEmpty,
+              trimmedValue.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
+        else {
+            throw NgrokError.invalidStaticURL
+        }
+
+        let explicitScheme = trimmedValue.range(
+            of: #"^[A-Za-z][A-Za-z0-9+.-]*:"#,
+            options: .regularExpression
+        ) != nil
+        let valueWithScheme: String
+        if explicitScheme {
+            guard trimmedValue.lowercased().hasPrefix("https://") else {
+                throw NgrokError.invalidStaticURL
+            }
+            valueWithScheme = trimmedValue
+        } else {
+            guard !trimmedValue.contains("://") else {
+                throw NgrokError.invalidStaticURL
+            }
+            valueWithScheme = "https://\(trimmedValue)"
+        }
+
         guard
-            var components = URLComponents(string: trimmedValue),
+            var components = URLComponents(string: valueWithScheme),
             components.scheme?.lowercased() == "https",
             let host = components.host,
-            !host.isEmpty,
+            Self.isValidHostname(host),
             components.user == nil,
             components.password == nil,
             components.query == nil,
@@ -34,6 +57,26 @@ struct NgrokStaticURL: Equatable, Sendable {
             throw NgrokError.invalidStaticURL
         }
         self.url = canonicalURL
+    }
+
+    private static func isValidHostname(_ host: String) -> Bool {
+        guard host.count <= 253, host.contains(".") else {
+            return false
+        }
+
+        let validLabelCharacters = CharacterSet(
+            charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
+        )
+        return host.split(separator: ".", omittingEmptySubsequences: false).allSatisfy { label in
+            guard !label.isEmpty,
+                  label.count <= 63,
+                  label.first != "-",
+                  label.last != "-"
+            else {
+                return false
+            }
+            return label.unicodeScalars.allSatisfy(validLabelCharacters.contains)
+        }
     }
 }
 

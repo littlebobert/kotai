@@ -59,41 +59,43 @@ actor ProxyConfiguration {
             return credentialCache
         }
 
-        if let storedVault = try secureStore.read(account: Self.vaultAccount) {
-            let data = Data(storedVault.utf8)
-            let storedCredentials = try JSONDecoder().decode(
-                [String: String].self,
-                from: data
-            )
-            let credentials = Dictionary(
-                uniqueKeysWithValues: storedCredentials.compactMap {
-                    key,
-                    value in
-                    Credential(rawValue: key).map { ($0, value) }
-                }
-            )
-            registerSensitiveValues(in: credentials)
-            credentialCache = credentials
-            return credentials
+        let candidates = try secureStore.readAllCandidates()
+        guard let storedCandidate = candidates.last, !storedCandidate.items.isEmpty else {
+            credentialCache = [:]
+            return [:]
         }
 
-        var credentials: [Credential: String] = [:]
-        for credential in Credential.allCases {
-            credentials[credential] = try secureStore.read(
-                account: credential.rawValue
-            )
-        }
-
-        if !credentials.isEmpty {
+        let credentials = try decodeCredentials(from: storedCandidate.items)
+        if storedCandidate.service != SecureStore.production {
             try saveCredentialVault(credentials)
-            for credential in Credential.allCases {
-                try secureStore.delete(account: credential.rawValue)
-            }
         }
 
         registerSensitiveValues(in: credentials)
         credentialCache = credentials
         return credentials
+    }
+
+    private func decodeCredentials(
+        from items: [String: String]
+    ) throws -> [Credential: String] {
+        if let storedVault = items[Self.vaultAccount] {
+            let data = Data(storedVault.utf8)
+            let storedCredentials = try JSONDecoder().decode(
+                [String: String].self,
+                from: data
+            )
+            return Dictionary(
+                uniqueKeysWithValues: storedCredentials.compactMap { key, value in
+                    Credential(rawValue: key).map { ($0, value) }
+                }
+            )
+        }
+
+        return Dictionary(
+            uniqueKeysWithValues: Credential.allCases.compactMap { credential in
+                items[credential.rawValue].map { (credential, $0) }
+            }
+        )
     }
 
     private func registerSensitiveValues(

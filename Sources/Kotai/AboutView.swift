@@ -2,28 +2,68 @@ import AppKit
 import SwiftUI
 
 struct AboutView: View {
+    private let versionText = AboutVersionFormatter.displayText(bundle: .main)
+
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 12) {
             KotaiIconView(size: 64)
 
-            Text("Kotai")
-                .font(.largeTitle.bold())
-
-            Text("OpenRouter chooser for Cursor, etc.")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-
-            Text("Made in Japan")
-                .font(.callout)
-
-            Button("Report a bug…") {
-                BugReporter.composeEmail()
+            VStack(spacing: 2) {
+                Text("Kotai")
+                    .font(.largeTitle.bold())
+                Text(versionText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .padding(.top, 6)
+
+            VStack(spacing: 8) {
+                Text("OpenRouter chooser for Cursor, etc.")
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.secondary)
+
+                Link(
+                    "Made in Japan",
+                    destination: URL(string: "https://kotai.jp/")!
+                )
+                .font(.callout)
+                .underline()
+
+                Button("Report a bug…") {
+                    BugReporter.composeEmail()
+                }
+            }
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 20)
+        .padding(.vertical, 18)
         .frame(width: 320)
+    }
+}
+
+enum AboutVersionFormatter {
+    static func displayText(bundle: Bundle) -> String {
+        displayText(
+            version: bundle.object(
+                forInfoDictionaryKey: "CFBundleShortVersionString"
+            ) as? String,
+            build: bundle.object(
+                forInfoDictionaryKey: "CFBundleVersion"
+            ) as? String
+        )
+    }
+
+    static func displayText(version: String?, build: String?) -> String {
+        let normalizedVersion = version?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedBuild = build?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let normalizedVersion, !normalizedVersion.isEmpty,
+              let normalizedBuild, !normalizedBuild.isEmpty
+        else {
+            return String(localized: "Version unavailable")
+        }
+        return String(
+            format: String(localized: "Version %@ (%@)"),
+            normalizedVersion,
+            normalizedBuild
+        )
     }
 }
 

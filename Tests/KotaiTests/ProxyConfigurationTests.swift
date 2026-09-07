@@ -218,3 +218,85 @@ struct ProxyConfigurationTests {
         return (Application(responder: responder), httpClient)
     }
 }
+
+struct ProxyConfigurationMigrationTests {
+    @Test
+    func legacyVaultMigratesAsOneCompleteWriteAndRemainsForRollback() async throws {
+        let legacyVault = #"{"personal-openrouter-key":"personal","work-openrouter-key":"work","ngrok-authtoken":"ngrok","proxy-token":"proxy"}"#
+        let backend = FakeSecureStoreBackend(itemsByService: [
+            SecureStore.legacyVaultService: ["credential-vault-v1": legacyVault],
+        ])
+        let configuration = ProxyConfiguration(secureStore: SecureStore(backend: backend))
+
+        #expect(try await configuration.credential(.personalOpenRouterKey) == "personal")
+        #expect(backend.writes.count == 1)
+        #expect(backend.writes[0].account == "credential-vault-v1")
+        #expect(backend.writes[0].serviceName == SecureStore.productionService)
+        #expect(backend.deleteCount == 0)
+        #expect(backend.items(serviceName: SecureStore.legacyVaultService)["credential-vault-v1"] == legacyVault)
+        #expect(try await configuration.credential(.workOpenRouterKey) == "work")
+        #expect(backend.readServices.count == 2)
+    }
+
+    @Test
+    func deniedLegacyAccessThrowsWithoutWritingOrDeleting() async {
+        let denial = SecureStoreError.accessDenied(errSecUserCanceled)
+        let backend = FakeSecureStoreBackend(readErrorByService: [
+            SecureStore.legacyVaultService: denial,
+        ])
+        let configuration = ProxyConfiguration(secureStore: SecureStore(backend: backend))
+
+        do {
+            _ = try await configuration.credential(.proxyToken)
+            Issue.record("Expected denied legacy access to throw")
+        } catch let error as SecureStoreError {
+            #expect(error == denial)
+        } catch {
+            Issue.record("Unexpected error: \\(error)")
+        }
+        #expect(backend.writes.isEmpty)
+        #expect(backend.deleteCount == 0)
+    }
+
+    @Test
+    func invalidLegacyVaultDoesNotPartiallyOverwriteCurrentVault() async {
+        let invalidVault = #"{"personal-openrouter-key":1}"#
+        let backend = FakeSecureStoreBackend(itemsByService: [
+            SecureStore.legacyVaultService: ["credential-vault-v1": invalidVault],
+        ])
+        let configuration = ProxyConfiguration(secureStore: SecureStore(backend: backend))
+
+        await #expect(throws: DecodingError.self) {
+            _ = try await configuration.credential(.personalOpenRouterKey)
+        }
+        #expect(backend.writes.isEmpty)
+        #expect(backend.items(serviceName: SecureStore.productionService).isEmpty)
+    }
+
+    @Test
+    func updatingMigratedCredentialsWritesCompleteVaultWithoutRequerying() async throws {
+        let backend = FakeSecureStoreBackend(itemsByService: [
+            SecureStore.priorLegacyService: [
+                "personal-openrouter-key": "personal",
+                "work-openrouter-key": "work",
+                "proxy-token": "old-proxy",
+            ],
+        ])
+        let configuration = ProxyConfiguration(secureStore: SecureStore(backend: backend))
+
+        #expect(try await configuration.credential(.workOpenRouterKey) == "work")
+        try await configuration.setCredential("new-proxy", for: .proxyToken)
+
+        #expect(backend.writes.count == 2)
+        let updatedData = try #require(backend.writes.last?.value.data(using: .utf8))
+        let updatedVault = try JSONDecoder().decode([String: String].self, from: updatedData)
+        #expect(updatedVault["personal-openrouter-key"] == "personal")
+        #expect(updatedVault["work-openrouter-key"] == "work")
+        #expect(updatedVault["proxy-token"] == "new-proxy")
+        #expect(backend.readServices == [
+            SecureStore.productionService,
+            SecureStore.legacyVaultService,
+            SecureStore.priorLegacyService,
+        ])
+    }
+}

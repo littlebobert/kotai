@@ -18,6 +18,7 @@ struct SettingsView: View {
     @State private var isRestartingNgrok = false
     @State private var isConfirmingTokenRegeneration = false
     @State private var savedMessageTask: Task<Void, Never>?
+    @FocusState private var isNgrokStaticURLFocused: Bool
 
     private var connectionDraft: SettingsConnectionDraft {
         SettingsConnectionDraft(
@@ -161,6 +162,12 @@ struct SettingsView: View {
                             text: $ngrokStaticURL,
                             prompt: StaticURLPrompt.fieldPrompt
                         )
+                        .focused($isNgrokStaticURLFocused)
+                        .onChange(of: isNgrokStaticURLFocused) { _, isFocused in
+                            if !isFocused {
+                                normalizeNgrokStaticURLDraft()
+                            }
+                        }
                         .onSubmit {
                             restartNgrokIfAvailable()
                         }
@@ -407,6 +414,13 @@ struct SettingsView: View {
                 errorMessage = error.localizedDescription
             }
         }
+    }
+
+    private func normalizeNgrokStaticURLDraft() {
+        guard let normalizedURL = connectionDraft.normalizedURL else {
+            return
+        }
+        ngrokStaticURL = normalizedURL.absoluteString
     }
 
     private func restartNgrokIfAvailable() {

@@ -15,8 +15,9 @@ DERIVED_DATA="${DERIVED_DATA:-$ROOT_DIR/.build/ReleaseDerivedData}"
 IDENTITY="${CODESIGN_IDENTITY:-Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)}"
 TEAM_ID="${DEVELOPMENT_TEAM:-XDWKSAH7W3}"
 APP="${RELEASE_APP_PATH:-$DERIVED_DATA/Build/Products/Release/Kotai.app}"
+BUNDLE_ID="com.justin.Kotai"
 
-for command in codesign lipo python3 security xcodebuild xcodegen; do
+for command in codesign lipo plutil python3 security xcodebuild xcodegen; do
   command -v "$command" >/dev/null || { echo "error: missing required command: $command" >&2; exit 1; }
 done
 read -r VERSION BUILD_NUMBER < <(python3 - "$PROJECT" <<'PYTHON'
@@ -66,13 +67,13 @@ SPARKLE_FRAMEWORK="$APP/Contents/Frameworks/Sparkle.framework"
 [[ -d "$APP" ]] || { echo "error: release app not found: $APP" >&2; exit 1; }
 [[ -x "$EXECUTABLE" ]] || { echo "error: release executable not found: $EXECUTABLE" >&2; exit 1; }
 [[ -d "$SPARKLE_FRAMEWORK" ]] || { echo "error: Sparkle.framework not found: $SPARKLE_FRAMEWORK" >&2; exit 1; }
-[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_PLIST")" == "com.justin.Kotai" ]] || { echo "error: unexpected bundle identifier" >&2; exit 1; }
+[[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_PLIST")" == "$BUNDLE_ID" ]] || { echo "error: unexpected bundle identifier" >&2; exit 1; }
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")" == "$VERSION" ]] || { echo "error: built version does not match project.yml" >&2; exit 1; }
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")" == "$BUILD_NUMBER" ]] || { echo "error: built build number does not match project.yml" >&2; exit 1; }
 [[ "$(lipo -archs "$EXECUTABLE")" == "arm64" ]] || { echo "error: release executable must be arm64-only" >&2; exit 1; }
 
 codesign --force --deep --sign "$IDENTITY" --options runtime --timestamp "$SPARKLE_FRAMEWORK"
-codesign --force --sign "$IDENTITY" --options runtime --timestamp "$APP"
+codesign --force --deep --sign "$IDENTITY" --options runtime --timestamp "$APP"
 codesign --verify --deep --strict --verbose=2 "$APP"
 
 ENTITLEMENTS="$(codesign -d --entitlements :- "$APP" 2>/dev/null || true)"

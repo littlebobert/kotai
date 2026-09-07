@@ -86,10 +86,13 @@ targets:
         MARKETING_VERSION: "0.1.6"
         CURRENT_PROJECT_VERSION: "7"
         GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: Apple Development
+        DEVELOPMENT_TEAM: XDWKSAH7W3
       configs:
-        Debug:
-          CODE_SIGN_STYLE: Manual
-          CODE_SIGN_IDENTITY: "Developer ID Application: Justin Henry Garcia (XDWKSAH7W3)"
+        Release:
+          CODE_SIGN_STYLE: Automatic
+          CODE_SIGN_IDENTITY: Apple Development
           DEVELOPMENT_TEAM: XDWKSAH7W3
           ENABLE_HARDENED_RUNTIME: YES
   KotaiTests:

@@ -120,3 +120,11 @@
 "Keychain returned status %lld." = "Keychain returned status %lld.";
 "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai." = "Kotai could not access its saved credentials. In the Keychain prompt, choose Always Allow, then relaunch Kotai.";
 "The stored Keychain value is not valid UTF-8." = "The stored Keychain value is not valid UTF-8.";
+"Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies." = "Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies.";
+"Example: example.ngrok.app or https://example.ngrok.app" = "Example: example.ngrok.app or https://example.ngrok.app";
+"If you have issues, report a bug." = "If you have issues, report a bug.";
+"Paste your ngrok static domain or HTTPS URL" = "Paste your ngrok static domain or HTTPS URL";
+"Report a bug" = "Report a bug";
+"Support" = "Support";
+"Version %@ (%@)" = "Version %@ (%@)";
+"Version unavailable" = "Version unavailable";

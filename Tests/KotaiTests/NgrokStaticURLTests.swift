@@ -10,6 +10,16 @@ struct NgrokStaticURLTests {
         #expect(staticURL.absoluteString == "https://example.ngrok.app")
     }
 
+    @Test(arguments: [
+        "kaycee-example.ngrok-free.dev",
+        "  KAYCEE-EXAMPLE.NGROK-FREE.DEV/  ",
+    ])
+    func normalizesBareDomain(rawValue: String) throws {
+        let staticURL = try NgrokStaticURL(rawValue)
+
+        #expect(staticURL.absoluteString == "https://kaycee-example.ngrok-free.dev")
+    }
+
     @Test
     func normalizesRootSlash() throws {
         let staticURL = try NgrokStaticURL("https://example.ngrok.app/")
@@ -25,14 +35,27 @@ struct NgrokStaticURLTests {
     }
 
     @Test(arguments: [
+        "",
         "http://example.ngrok.app",
-        "example.ngrok.app",
+        "ftp://example.ngrok.app",
+        "HTTP://example.ngrok.app",
         "https:///",
+        "https://example",
         "https://example.ngrok.app/proxy",
+        "example.ngrok.app/proxy",
         "https://example.ngrok.app?token=value",
+        "example.ngrok.app?token=value",
         "https://example.ngrok.app#fragment",
+        "example.ngrok.app#fragment",
         "https://user@example.ngrok.app",
+        "user@example.ngrok.app",
         "https://user:password@example.ngrok.app",
+        "https://example .ngrok.app",
+        "example .ngrok.app",
+        "https://example..ngrok.app",
+        "https://-example.ngrok.app",
+        "https://example-.ngrok.app",
+        ".ngrok.app",
     ])
     func rejectsInvalidStaticURL(rawValue: String) {
         #expect(throws: NgrokError.self) {
@@ -87,7 +110,9 @@ struct NgrokStaticURLTests {
 
     @Test
     func updatingStaticURLPreservesAuthtoken() async throws {
+        let backend = FakeSecureStoreBackend()
         let configuration = ProxyConfiguration(
+            secureStore: SecureStore(backend: backend),
             initialCredentials: [
                 .ngrokAuthtoken: "existing-token",
                 .ngrokStaticURL: "https://old.ngrok.app",
