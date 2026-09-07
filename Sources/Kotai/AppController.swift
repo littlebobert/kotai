@@ -81,7 +81,7 @@ final class AppController {
     }
 
     private static func installApplicationIcon() {
-        NSApplication.shared.applicationIconImage = KotaiIcon.image
+        NSApplication.shared.applicationIconImage = KotaiIcon.dockImage
     }
 
     var statusDetail: String? {
