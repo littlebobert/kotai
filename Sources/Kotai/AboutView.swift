@@ -10,28 +10,28 @@ struct AboutView: View {
 
             VStack(spacing: 2) {
                 Text("Kotai")
-                    .font(.largeTitle.bold())
+                    .font(.title.bold())
                 Text(versionText)
-                    .font(.caption)
+                    .font(.body)
                     .foregroundStyle(.secondary)
             }
 
-            VStack(spacing: 8) {
-                Text("OpenRouter chooser for Cursor, etc.")
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+            Text("OpenRouter chooser for Cursor, etc.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+                .padding(.vertical, -4)
 
-                Link(
-                    "Made in Japan",
-                    destination: URL(string: "https://kotai.jp/")!
-                )
-                .font(.callout)
-                .underline()
+            Link(
+                "Made in Japan",
+                destination: URL(string: "https://kotai.jp/")!
+            )
+            .font(.callout)
+            .underline()
 
-                Button("Report a bug…") {
-                    BugReporter.composeEmail()
-                }
+            Button("Report a bug…") {
+                BugReporter.composeEmail()
             }
+            .padding(.top, 4)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 18)

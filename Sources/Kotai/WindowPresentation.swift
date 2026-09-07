@@ -34,6 +34,7 @@ func presentAboutWindow(openWindow: OpenWindowAction) {
     presentWindow(
         id: "about",
         title: String(localized: "About Kotai"),
+        centersWindow: true,
         openWindow: openWindow
     )
 }
@@ -51,6 +52,7 @@ func presentDiagnosticsWindow(openWindow: OpenWindowAction) {
 private func presentWindow(
     id: String,
     title: String,
+    centersWindow: Bool = false,
     openWindow: OpenWindowAction
 ) {
     NSApplication.shared.setActivationPolicy(.regular)
@@ -67,6 +69,9 @@ private func presentWindow(
 
         let presentedWindow = NSApplication.shared.windows.first { window in
             window.title == title
+        }
+        if centersWindow {
+            presentedWindow?.center()
         }
         presentedWindow?.makeKeyAndOrderFront(nil)
         WindowActivationCoordinator.shared.observeClosing(of: presentedWindow)
