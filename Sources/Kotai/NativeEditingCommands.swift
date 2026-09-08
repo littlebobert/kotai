@@ -5,8 +5,6 @@ struct KotaiCommands: Commands {
     let controller: AppController
     let appDelegate: KotaiAppDelegate
 
-    @Environment(\.openSettings) private var openSettings
-
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About Kotai") {
@@ -21,8 +19,7 @@ struct KotaiCommands: Commands {
 
         CommandGroup(replacing: .appSettings) {
             Button("Settings…") {
-                controller.completeSetupWizard()
-                presentSettingsWindow(openSettings: openSettings)
+                appDelegate.presentSettings()
             }
             .keyboardShortcut(",", modifiers: .command)
 

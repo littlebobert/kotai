@@ -3,33 +3,6 @@ import Observation
 import SwiftUI
 
 @MainActor
-func presentSettingsWindow(openSettings: OpenSettingsAction) {
-    NSApplication.shared.setActivationPolicy(.regular)
-    NSApplication.shared.activate(ignoringOtherApps: true)
-    NSRunningApplication.current.activate(
-        options: [.activateAllWindows]
-    )
-    openSettings()
-
-    Task { @MainActor in
-        try? await Task.sleep(for: .milliseconds(150))
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        NSRunningApplication.current.activate(
-            options: [.activateAllWindows]
-        )
-
-        let expectedTitles = [
-            String(localized: "Kotai Settings"),
-            String(localized: "Kotai Setup"),
-        ]
-        let settingsWindow = NSApplication.shared.windows.first { window in
-            expectedTitles.contains(window.title)
-        }
-        settingsWindow?.makeKeyAndOrderFront(nil)
-    }
-}
-
-@MainActor
 final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
     let controller = AppController()
     let usageMenuBarSettings = UsageMenuBarSettings()
@@ -38,6 +11,7 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
     private var diagnosticsWindowController: DiagnosticsWindowController?
     private var usageWindowController: UsageWindowController?
     private var setupWindowController: SetupWindowController?
+    private var settingsWindowController: SettingsWindowController?
     private var hasPresentedInitialSetup = false
     private var usageStatusItem: NSStatusItem?
     private var usageStatusTask: Task<Void, Never>?
@@ -65,6 +39,19 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
     ) -> Bool {
         presentDiagnostics()
         return true
+    }
+
+    func presentSettings() {
+        controller.completeSetupWizard()
+        if settingsWindowController == nil {
+            settingsWindowController = SettingsWindowController(
+                controller: controller,
+                usageMenuBarSettings: usageMenuBarSettings,
+                usageMenuBarSettingsDidChange: usageMenuBarSettingsDidChange,
+                openSetup: presentSetup
+            )
+        }
+        settingsWindowController?.present()
     }
 
     func presentSetup() {
@@ -171,6 +158,45 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         }
         hasPresentedInitialSetup = true
         presentSetup()
+    }
+}
+
+@MainActor
+private final class SettingsWindowController: NSWindowController {
+    init(
+        controller: AppController,
+        usageMenuBarSettings: UsageMenuBarSettings,
+        usageMenuBarSettingsDidChange: @escaping () -> Void,
+        openSetup: @escaping () -> Void
+    ) {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 700, height: 600),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = String(localized: "Kotai Settings")
+        configureCenteredTitle(String(localized: "Kotai Settings"), in: window)
+        window.minSize = NSSize(width: 620, height: 520)
+        window.isReleasedWhenClosed = false
+        window.setFrameAutosaveName("KotaiSettingsWindow")
+        if !window.setFrameUsingName("KotaiSettingsWindow") { window.center() }
+        window.contentView = NSHostingView(
+            rootView: SettingsView(
+                controller: controller,
+                usageMenuBarSettings: usageMenuBarSettings,
+                usageMenuBarSettingsDidChange: usageMenuBarSettingsDidChange,
+                openSetup: openSetup
+            )
+        )
+        super.init(window: window)
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    func present() {
+        guard let window else { return }
+        activateApplication(); showWindow(nil); window.makeKeyAndOrderFront(nil)
     }
 }
 

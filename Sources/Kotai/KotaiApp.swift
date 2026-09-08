@@ -7,12 +7,7 @@ struct KotaiApp: App {
 
     var body: some Scene {
         Settings {
-            SettingsView(
-                controller: appDelegate.controller,
-                usageMenuBarSettings: appDelegate.usageMenuBarSettings,
-                usageMenuBarSettingsDidChange: appDelegate.usageMenuBarSettingsDidChange,
-                openSetup: appDelegate.presentSetup
-            )
+            EmptyView()
         }
         .commands {
             KotaiCommands(

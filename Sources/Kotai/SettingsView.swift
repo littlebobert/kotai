@@ -68,11 +68,7 @@ struct SettingsView: View {
             Divider()
             statusFooter
         }
-        .frame(width: 620, height: 480)
-        .background {
-            WindowTitleSetter(title: String(localized: "Kotai Settings"))
-                .frame(width: 0, height: 0)
-        }
+        .frame(minWidth: 620, maxWidth: .infinity, minHeight: 520, maxHeight: .infinity)
         .task {
             await load()
         }
