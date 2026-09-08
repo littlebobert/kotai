@@ -69,6 +69,7 @@ final class AppController {
     private(set) var shouldShowSetupWizard = false
 
     init() {
+        NSApplication.shared.applicationIconImage = KotaiIcon.image
         self.configuration = ProxyConfiguration()
         var httpClientConfiguration = HTTPClient.Configuration()
         httpClientConfiguration.httpVersion = .http1Only
