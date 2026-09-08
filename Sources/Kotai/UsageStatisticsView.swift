@@ -10,15 +10,27 @@ struct UsageStatisticsView: View {
     @State private var isLoading = false
     @State private var lastUpdated: Date?
 
+    private let metricColumns = [
+        GridItem(.adaptive(minimum: 130), spacing: 16, alignment: .leading),
+    ]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Picker("Range", selection: $days) {
-                    Text("7 days").tag(7); Text("30 days").tag(30)
-                }.pickerStyle(.segmented).frame(width: 180)
+                    Text("7 days").tag(7)
+                    Text("30 days").tag(30)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 180)
                 Spacer()
-                if let lastUpdated { Text("Updated \(lastUpdated.formatted(date: .omitted, time: .shortened))").foregroundStyle(.secondary) }
-                Button("Refresh") { refresh() }.disabled(isLoading)
+                if let lastUpdated {
+                    Text("Updated \(lastUpdated.formatted(date: .omitted, time: .shortened))")
+                        .foregroundStyle(.secondary)
+                }
+                Button("Refresh") { refresh() }
+                    .disabled(isLoading)
             }
             if isLoading && personal == nil && work == nil { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
             else {
@@ -27,6 +39,7 @@ struct UsageStatisticsView: View {
                         accountSection(title: "Personal", result: personal)
                         accountSection(title: "Work", result: work)
                     }
+                    .frame(maxWidth: .infinity)
                 }
             }
         }
@@ -43,13 +56,37 @@ struct UsageStatisticsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(accountDescription(snapshot.connection))
                         .foregroundStyle(.secondary)
-                    HStack(spacing: 18) {
+                    LazyVGrid(columns: metricColumns, alignment: .leading, spacing: 12) {
                         metric("Spend", currency(snapshot.usage.spend))
-                        metric("Requests", snapshot.usage.requests.formatted(.number.precision(.fractionLength(0))))
-                        metric("Input tokens", snapshot.usage.promptTokens.formatted(.number.notation(.compactName)))
-                        metric("Output tokens", snapshot.usage.completionTokens.formatted(.number.notation(.compactName)))
-                        metric("Credits remaining", currency(max(0, snapshot.credits.totalCredits - snapshot.credits.totalUsage)))
-                        metric("OpenAI cost", snapshot.openAICost.map(currency) ?? "Unavailable")
+                        metric(
+                            "Requests",
+                            snapshot.usage.requests.formatted(
+                                .number.precision(.fractionLength(0))
+                            )
+                        )
+                        metric(
+                            "Input tokens",
+                            snapshot.usage.promptTokens.formatted(
+                                .number.notation(.compactName)
+                            )
+                        )
+                        metric(
+                            "Output tokens",
+                            snapshot.usage.completionTokens.formatted(
+                                .number.notation(.compactName)
+                            )
+                        )
+                        metric(
+                            "Credits remaining",
+                            currency(max(
+                                0,
+                                snapshot.credits.totalCredits - snapshot.credits.totalUsage
+                            ))
+                        )
+                        metric(
+                            "OpenAI cost",
+                            snapshot.openAICost.map(currency) ?? "Unavailable"
+                        )
                     }
                     if !snapshot.usage.daily.isEmpty {
                         Chart(snapshot.usage.daily) { point in
@@ -64,13 +101,16 @@ struct UsageStatisticsView: View {
                         }
                     }
                     if snapshot.usage.isTruncated { Label("OpenRouter truncated this result. Narrow the date range for complete totals.", systemImage: "exclamationmark.triangle").foregroundStyle(.orange) }
-                }.padding(6)
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
             case .failure(let error):
                 ContentUnavailableView("Usage unavailable", systemImage: "exclamationmark.triangle", description: Text(error.localizedDescription))
             case nil:
                 Text("Loading…").foregroundStyle(.secondary).padding(20)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func accountDescription(_ connection: ManagedAccountConnection) -> String {
@@ -81,8 +121,18 @@ struct UsageStatisticsView: View {
     }
 
     private func metric(_ title: String, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) { Text(title).font(.caption).foregroundStyle(.secondary); Text(value).font(.title3.monospacedDigit()) }
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.title3.monospacedDigit())
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
+
     private func currency(_ value: Double) -> String { value.formatted(.currency(code: "USD")) }
     private func refresh() {
         guard !isLoading else { return }; isLoading = true

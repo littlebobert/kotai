@@ -74,6 +74,7 @@ struct NativeLogTextView: NSViewRepresentable {
         private weak var scrollView: NSScrollView?
         private weak var textView: NSTextView?
         private var boundsObserver: NSObjectProtocol?
+        private var scrollWheelMonitor: Any?
         private var lastText = ""
         private var lastScrollToLatestRequest = 0
         private var isProgrammaticScroll = false
@@ -94,13 +95,26 @@ struct NativeLogTextView: NSViewRepresentable {
                     self?.visibleBoundsDidChange()
                 }
             }
+            scrollWheelMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: .scrollWheel
+            ) { [weak self] event in
+                var handledEvent: NSEvent?
+                MainActor.assumeIsolated {
+                    handledEvent = self?.handleScrollWheelDuringSelection(event) ?? event
+                }
+                return handledEvent
+            }
         }
 
         func disconnect() {
             if let boundsObserver {
                 NotificationCenter.default.removeObserver(boundsObserver)
             }
+            if let scrollWheelMonitor {
+                NSEvent.removeMonitor(scrollWheelMonitor)
+            }
             boundsObserver = nil
+            scrollWheelMonitor = nil
         }
 
         func update(
@@ -123,6 +137,25 @@ struct NativeLogTextView: NSViewRepresentable {
             if explicitlyRequested || (textChanged && followsLatestEntry) {
                 scrollToLatest()
             }
+        }
+
+        private func handleScrollWheelDuringSelection(_ event: NSEvent) -> NSEvent? {
+            guard NSEvent.pressedMouseButtons & 1 == 1,
+                  let scrollView,
+                  let textView,
+                  event.window === textView.window
+            else {
+                return event
+            }
+
+            let clipView = scrollView.contentView
+            let documentHeight = scrollView.documentView?.bounds.height ?? 0
+            let maximumY = max(0, documentHeight - clipView.bounds.height)
+            let proposedY = clipView.bounds.origin.y - event.scrollingDeltaY
+            let constrainedY = min(maximumY, max(0, proposedY))
+            clipView.scroll(to: NSPoint(x: clipView.bounds.origin.x, y: constrainedY))
+            scrollView.reflectScrolledClipView(clipView)
+            return nil
         }
 
         private func visibleBoundsDidChange() {

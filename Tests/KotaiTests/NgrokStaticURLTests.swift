@@ -20,6 +20,27 @@ struct NgrokStaticURLTests {
         #expect(staticURL.absoluteString == "https://kaycee-example.ngrok-free.dev")
     }
 
+    @Test(arguments: [
+        "",
+        "existing-token",
+        "contains whitespace even though this is long enough",
+        "!invalid-symbols-are-not-accepted-even-when-long-enough!",
+    ])
+    func rejectsMalformedAuthtokens(rawValue: String) {
+        #expect(throws: NgrokError.invalidAuthtoken) {
+            try NgrokAuthtoken(rawValue)
+        }
+    }
+
+    @Test
+    func acceptsCurrentNgrokAuthtokenShape() throws {
+        let token = try NgrokAuthtoken(
+            "  1rlHSX3HqrqmOWZdeJ6bIv8rfuo_4cmS1QswRGyxcQD8NOukF  "
+        )
+
+        #expect(token.value == "1rlHSX3HqrqmOWZdeJ6bIv8rfuo_4cmS1QswRGyxcQD8NOukF")
+    }
+
     @Test
     func normalizesRootSlash() throws {
         let staticURL = try NgrokStaticURL("https://example.ngrok.app/")

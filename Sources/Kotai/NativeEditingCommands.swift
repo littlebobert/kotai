@@ -11,20 +11,26 @@ struct KotaiCommands: Commands {
                 appDelegate.presentAbout()
             }
 
-            Button("Check for Updates…") {
+            Button {
                 controller.autoUpdates.checkForUpdates()
+            } label: {
+                Label("Check for Updates…", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
             }
             .disabled(!controller.autoUpdates.canCheckForUpdates)
         }
 
         CommandGroup(replacing: .appSettings) {
-            Button("Settings…") {
+            Button {
                 appDelegate.presentSettings()
+            } label: {
+                Label("Settings…", systemImage: "gearshape")
             }
             .keyboardShortcut(",", modifiers: .command)
 
-            Button("Run Setup…") {
+            Button {
                 appDelegate.presentSetup()
+            } label: {
+                Label("Run Setup…", systemImage: "wand.and.stars")
             }
         }
 
@@ -75,20 +81,28 @@ struct KotaiCommands: Commands {
         }
 
         CommandGroup(after: .windowList) {
-            Button("Diagnostics") {
+            Button {
                 appDelegate.presentDiagnostics()
+            } label: {
+                Label("Diagnostics", systemImage: "stethoscope")
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
-            Button("Usage Statistics") {
+            Button {
                 appDelegate.presentUsageStatistics()
+            } label: {
+                Label("Usage Statistics", systemImage: "chart.xyaxis.line")
             }
             .keyboardShortcut("u", modifiers: [.command, .shift])
         }
 
         CommandGroup(replacing: .help) {
-            Link("Kotai Website", destination: URL(string: "https://kotai.jp/")!)
-            Button("Report a Bug…") {
+            Link(destination: URL(string: "https://kotai.jp/")!) {
+                Label("Kotai Website", systemImage: "globe")
+            }
+            Button {
                 BugReporter.composeEmail()
+            } label: {
+                Label("Report a Bug…", systemImage: "ladybug")
             }
         }
     }

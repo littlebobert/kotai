@@ -183,7 +183,7 @@ struct OpenRouterManagementClient: Sendable {
         var body: [String: Any] = [
             "metrics": ["total_usage", "request_count", "prompt_tokens", "completion_tokens", "reasoning_tokens"],
             "dimensions": dimensions,
-            "filters": [["dimension": "workspace", "operator": "eq", "value": workspaceID]],
+            "filters": [["field": "workspace", "operator": "eq", "value": workspaceID]],
             "time_range": ["start": ISO8601DateFormatter().string(from: start), "end": ISO8601DateFormatter().string(from: end)],
             "limit": 1000,
         ]

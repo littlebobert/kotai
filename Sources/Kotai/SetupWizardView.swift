@@ -345,7 +345,7 @@ struct SetupWizardView: View {
         case .upgrade, .personal, .work:
             return true
         case .ngrok:
-            return !effectiveNgrokAuthtoken.isEmpty
+            return (try? NgrokAuthtoken(effectiveNgrokAuthtoken)) != nil
                 && !ngrokStaticURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         case .cursor, .modelRouting:
             return true

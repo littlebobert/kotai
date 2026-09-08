@@ -1,5 +1,21 @@
 import Foundation
 
+struct NgrokAuthtoken: Equatable, Sendable {
+    let value: String
+
+    init(_ rawValue: String) throws {
+        let trimmedValue = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let allowedCharacters = CharacterSet.alphanumerics.union(
+            CharacterSet(charactersIn: "_-"))
+        guard trimmedValue.count >= 40,
+              trimmedValue.unicodeScalars.allSatisfy(allowedCharacters.contains)
+        else {
+            throw NgrokError.invalidAuthtoken
+        }
+        value = trimmedValue
+    }
+}
+
 struct NgrokStaticURL: Equatable, Sendable {
     let url: URL
 
@@ -170,10 +186,7 @@ struct NgrokManager {
         staticURL rawStaticURL: String,
         progress: @MainActor @escaping (NgrokSetupPhase) -> Void
     ) async throws -> NgrokEndpoint {
-        let authtoken = rawAuthtoken.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !authtoken.isEmpty else {
-            throw NgrokError.invalidAuthtoken
-        }
+        let authtoken = try NgrokAuthtoken(rawAuthtoken)
         let staticURL = try NgrokStaticURL(rawStaticURL)
 
         progress(.starting)
@@ -183,7 +196,7 @@ struct NgrokManager {
         try writeConfiguration()
         process.arguments = Self.arguments(staticURL: staticURL)
         process.environment = ProcessInfo.processInfo.environment.merging(
-            ["NGROK_AUTHTOKEN": authtoken]
+            ["NGROK_AUTHTOKEN": authtoken.value]
         ) { _, kotaiValue in
             kotaiValue
         }
@@ -212,6 +225,12 @@ struct NgrokManager {
                 throw NgrokError.configuredEndpointMismatch
             }
             if !process.isRunning {
+                if outputText.contains("ERR_NGROK_105")
+                    || outputText.contains("ERR_NGROK_106")
+                    || outputText.contains("ERR_NGROK_107")
+                {
+                    throw NgrokError.invalidAuthtoken
+                }
                 throw NgrokError.agentExited(outputText)
             }
             throw error

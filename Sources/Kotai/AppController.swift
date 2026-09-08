@@ -434,9 +434,13 @@ final class AppController {
                 configuration.credential(.workOpenRouterKey),
                 configuration.credential(.proxyToken),
             ]
-            guard Self.credentialAvailability(values: requiredCredentials) == .complete else {
+            guard Self.credentialAvailability(values: requiredCredentials) == .complete,
+                  let rawNgrokAuthtoken = requiredCredentials[0],
+                  let ngrokStaticURL = requiredCredentials[1],
+                  let ngrokAuthtoken = try? NgrokAuthtoken(rawNgrokAuthtoken)
+            else {
                 KotaiLogger.shared.warning(
-                    "Runtime needs configuration; one or more credentials are missing"
+                    "Runtime needs configuration; one or more credentials are missing or invalid"
                 )
                 isSetupRequired = true
                 shouldShowSetupWizard = true
@@ -444,24 +448,20 @@ final class AppController {
                 return
             }
 
-            guard
-                let ngrokAuthtoken = requiredCredentials[0],
-                let ngrokStaticURL = requiredCredentials[1]
-            else {
-                isSetupRequired = true
-                runtimeStatus = .needsConfiguration
-                return
-            }
-
             isSetupRequired = false
             runtimeStatus = .starting
             _ = try await restartNgrok(
-                authtoken: ngrokAuthtoken,
+                authtoken: ngrokAuthtoken.value,
                 staticURL: ngrokStaticURL,
                 progress: { _ in }
             )
             runtimeStatus = .running
             KotaiLogger.shared.info("Runtime connected")
+        } catch NgrokError.invalidAuthtoken {
+            KotaiLogger.shared.warning("Runtime needs configuration; the saved ngrok authtoken is invalid")
+            isSetupRequired = true
+            shouldShowSetupWizard = true
+            runtimeStatus = .needsConfiguration
         } catch {
             let availability = Self.credentialAvailability(values: [], error: error)
             KotaiLogger.shared.error(
