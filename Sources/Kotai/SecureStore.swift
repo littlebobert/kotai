@@ -61,7 +61,7 @@ protocol SecureStoreBackend: Sendable {
 struct SecureStore: Sendable {
     struct Service: Equatable, Sendable {
         enum Role: String, Sendable {
-            case production = "production-v3"
+            case production = "production-current"
             case retainedRollback = "retained-v2"
             case priorLegacy = "prior-legacy"
             case custom
@@ -119,8 +119,15 @@ struct SecureStore: Sendable {
         ]
     }
 
-    static let productionService = "com.justin.Kotai.credentials.v3"
-    static let legacyVaultService = "com.justin.Kotai.credentials.v2"
+    static let releaseVaultService = "com.justin.Kotai.credentials.v4"
+    static let developmentVaultService = "com.justin.Kotai.credentials.debug.v1"
+#if DEBUG
+    static let productionService = developmentVaultService
+#else
+    static let productionService = releaseVaultService
+#endif
+    static let legacyVaultService = "com.justin.Kotai.credentials.v3"
+    static let priorVaultService = "com.justin.Kotai.credentials.v2"
     static let priorLegacyService = "com.kotai.credentials"
     static let production = Service(
         name: productionService,
@@ -128,6 +135,7 @@ struct SecureStore: Sendable {
     )
     static let migrationServices = [
         Service(name: legacyVaultService, role: .retainedRollback),
+        Service(name: priorVaultService, role: .retainedRollback),
         Service(name: priorLegacyService, role: .priorLegacy),
     ]
 
@@ -151,7 +159,6 @@ struct SecureStore: Sendable {
         for legacyService in legacyServices {
             let items = try readItems(service: legacyService)
             candidates.append((legacyService, items))
-            if !items.isEmpty { return candidates }
         }
         return candidates
     }

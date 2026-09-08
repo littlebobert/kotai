@@ -52,14 +52,16 @@ On first launch, the setup wizard asks for:
 
 Kotai stores credentials in the ordinary file-based macOS Keychain, matching the
 Kehai/Sasu approach, as one JSON vault under the fresh service
-`com.justin.Kotai.credentials.v3` with `AfterFirstUnlockThisDeviceOnly`
-accessibility. On first access after upgrading, Kotai checks `v3` once, then checks
-the legacy `com.justin.Kotai.credentials.v2` and `com.kotai.credentials` services
-once each until it finds data. It copies the first complete decoded vault to `v3`
-in one atomic write. A denied or cancelled Keychain request, or an invalid legacy
-vault, stops migration and remains an access/error state rather than appearing as
-missing setup. Legacy items are intentionally retained after a successful copy for
-rollback safety; all subsequent reads and writes use `v3`.
+`com.justin.Kotai.credentials.v4` with `AfterFirstUnlockThisDeviceOnly`
+accessibility. On first access after upgrading, Kotai checks the retained `v3`,
+`v2`, and `com.kotai.credentials` vaults. It merges them in one atomic write:
+newer values win while older vaults fill keys absent from partial newer vaults.
+Explicitly stored empty values remain empty. A denied or cancelled Keychain
+request, or an invalid legacy vault, stops migration and remains an access/error
+state rather than appearing as missing setup. Legacy items are intentionally
+retained after a successful copy for rollback safety; all subsequent release reads
+and writes use `v4`. Development builds use a separate vault so their signing
+identity cannot alter the release vault's legacy Keychain access controls.
 
 The confirmed static ngrok URL is non-secret but travels in the complete vault so
 migration and settings updates remain atomic. `UserDefaults` retains only the

@@ -373,7 +373,61 @@ struct ProxyConfigurationMigrationTests {
         #expect(backend.deleteCount == 0)
         #expect(backend.items(serviceName: SecureStore.legacyVaultService)["credential-vault-v1"] == legacyVault)
         #expect(try await configuration.credential(.workOpenRouterKey) == "work")
-        #expect(backend.reads.count == 2)
+        #expect(backend.reads.count == 5)
+    }
+
+    @Test
+    func partialNewerVaultsMergeWithCompleteOlderVault() async throws {
+        let newestVault = #"{"personal-openrouter-key":"new-personal","personal-openrouter-management-key":"management","personal-managed-connection":"metadata"}"#
+        let priorVault = #"{"ngrok-authtoken":"new-ngrok","ngrok-static-url":"https://new.ngrok-free.dev"}"#
+        let oldestVault = #"{"ngrok-authtoken":"old-ngrok","ngrok-static-url":"https://old.ngrok-free.dev","personal-openrouter-key":"old-personal","work-openrouter-key":"work","proxy-token":"proxy"}"#
+        let backend = FakeSecureStoreBackend(itemsByService: [
+            SecureStore.legacyVaultService: ["credential-vault-v1": newestVault],
+            SecureStore.priorVaultService: ["credential-vault-v1": priorVault],
+            SecureStore.priorLegacyService: ["credential-vault-v1": oldestVault],
+        ])
+        let configuration = ProxyConfiguration(secureStore: SecureStore(backend: backend))
+
+        #expect(try await configuration.credential(.personalOpenRouterKey) == "new-personal")
+        #expect(try await configuration.credential(.workOpenRouterKey) == "work")
+        #expect(try await configuration.credential(.proxyToken) == "proxy")
+        #expect(try await configuration.credential(.ngrokAuthtoken) == "new-ngrok")
+        #expect(
+            try await configuration.credential(.ngrokStaticURL)
+                == "https://new.ngrok-free.dev"
+        )
+        #expect(
+            try await configuration.credential(.personalOpenRouterManagementKey)
+                == "management"
+        )
+
+        #expect(backend.writes.count == 1)
+        let migratedData = try #require(backend.writes[0].value.data(using: .utf8))
+        let migratedVault = try JSONDecoder().decode([String: String].self, from: migratedData)
+        #expect(migratedVault["personal-openrouter-key"] == "new-personal")
+        #expect(migratedVault["work-openrouter-key"] == "work")
+        #expect(migratedVault["proxy-token"] == "proxy")
+        #expect(migratedVault["ngrok-authtoken"] == "new-ngrok")
+        #expect(backend.reads.count == 4)
+    }
+
+    @Test
+    func explicitEmptyNewerValueIsNotResurrectedFromOlderVault() async throws {
+        let newerVault = #"{"work-openrouter-key":""}"#
+        let olderVault = #"{"work-openrouter-key":"old-work","proxy-token":"proxy"}"#
+        let backend = FakeSecureStoreBackend(itemsByService: [
+            SecureStore.legacyVaultService: ["credential-vault-v1": newerVault],
+            SecureStore.priorLegacyService: ["credential-vault-v1": olderVault],
+        ])
+        let configuration = ProxyConfiguration(secureStore: SecureStore(backend: backend))
+
+        #expect(try await configuration.credential(.workOpenRouterKey) == "")
+        #expect(try await configuration.credential(.proxyToken) == "proxy")
+
+        let migratedData = try #require(backend.writes[0].value.data(using: .utf8))
+        let migratedVault = try JSONDecoder().decode([String: String].self, from: migratedData)
+        #expect(migratedVault["work-openrouter-key"] == "")
+        #expect(migratedVault["proxy-token"] == "proxy")
     }
 
     @Test
@@ -474,6 +528,7 @@ struct ProxyConfigurationMigrationTests {
         #expect(backend.reads.map(\.serviceName) == [
             SecureStore.productionService,
             SecureStore.legacyVaultService,
+            SecureStore.priorVaultService,
             SecureStore.priorLegacyService,
             SecureStore.priorLegacyService,
         ])

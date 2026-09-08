@@ -10,7 +10,13 @@ struct SecureStoreTests {
         let readQuery = secureStore.readQuery(account: .vault)
         let mutationQuery = secureStore.mutationQuery(account: "test-account")
 
-        #expect(SecureStore.productionService == "com.justin.Kotai.credentials.v3")
+        #if DEBUG
+        #expect(SecureStore.productionService == SecureStore.developmentVaultService)
+        #expect(SecureStore.productionService != SecureStore.releaseVaultService)
+        #else
+        #expect(SecureStore.productionService == SecureStore.releaseVaultService)
+        #endif
+        #expect(SecureStore.releaseVaultService == "com.justin.Kotai.credentials.v4")
         #expect(readQuery[kSecAttrService as String] as? String == SecureStore.productionService)
         #expect(
             readQuery[kSecAttrAccount as String] as? String
@@ -66,10 +72,11 @@ struct SecureStoreTests {
     }
 
     @Test
-    func candidateLookupStopsAfterFirstPopulatedService() throws {
+    func migrationReadsAllRetainedServicesBeforeMerging() throws {
         let backend = FakeSecureStoreBackend(itemsByService: [
             SecureStore.legacyVaultService: ["credential-vault-v1": "{}"],
-            SecureStore.priorLegacyService: ["unused": "unused"],
+            SecureStore.priorVaultService: ["credential-vault-v1": "{}"],
+            SecureStore.priorLegacyService: ["credential-vault-v1": "{}"],
         ])
         let secureStore = SecureStore(backend: backend)
 
@@ -78,6 +85,8 @@ struct SecureStoreTests {
         #expect(candidates.map(\.service.name) == [
             SecureStore.productionService,
             SecureStore.legacyVaultService,
+            SecureStore.priorVaultService,
+            SecureStore.priorLegacyService,
         ])
         #expect(backend.reads == [
             .init(
@@ -87,6 +96,14 @@ struct SecureStoreTests {
             .init(
                 accountNames: [SecureStore.Account.vault.name],
                 serviceName: SecureStore.legacyVaultService
+            ),
+            .init(
+                accountNames: [SecureStore.Account.vault.name],
+                serviceName: SecureStore.priorVaultService
+            ),
+            .init(
+                accountNames: [SecureStore.Account.vault.name],
+                serviceName: SecureStore.priorLegacyService
             ),
         ])
     }
@@ -109,7 +126,7 @@ struct SecureStoreTests {
     }
 
     @Test
-    func productionAndV2ReadOnlyTheVaultAccount() throws {
+    func productionAndRetainedVaultServicesReadOnlyTheVaultAccount() throws {
         let backend = FakeSecureStoreBackend()
         let secureStore = SecureStore(backend: backend)
 
@@ -119,6 +136,8 @@ struct SecureStoreTests {
         #expect(backend.reads[0].serviceName == SecureStore.productionService)
         #expect(backend.reads[1].accountNames == [SecureStore.Account.vault.name])
         #expect(backend.reads[1].serviceName == SecureStore.legacyVaultService)
+        #expect(backend.reads[2].accountNames == [SecureStore.Account.vault.name])
+        #expect(backend.reads[2].serviceName == SecureStore.priorVaultService)
     }
 
     @Test
@@ -134,7 +153,7 @@ struct SecureStoreTests {
         let candidates = try secureStore.readAllCandidates()
 
         #expect(candidates.last?.items == [SecureStore.Account.vault.name: "{}"])
-        #expect(backend.reads.count == 3)
+        #expect(backend.reads.count == 4)
         #expect(backend.reads.last?.accountNames == [SecureStore.Account.vault.name])
     }
 
@@ -148,7 +167,7 @@ struct SecureStoreTests {
         let candidates = try secureStore.readAllCandidates()
 
         #expect(candidates.last?.items == ["proxy-token": "proxy"])
-        #expect(backend.reads.count == 4)
+        #expect(backend.reads.count == 5)
         #expect(
             backend.reads.last?.accountNames
                 == SecureStore.Account.priorCredentials.map(\.name)

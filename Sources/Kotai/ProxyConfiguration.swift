@@ -137,13 +137,18 @@ actor ProxyConfiguration {
         }
 
         let candidates = try secureStore.readAllCandidates()
-        guard let storedCandidate = candidates.last, !storedCandidate.items.isEmpty else {
+        guard candidates.contains(where: { !$0.items.isEmpty }) else {
             credentialCache = [:]
             return [:]
         }
 
-        let credentials = try decodeCredentials(from: storedCandidate.items)
-        if storedCandidate.service != SecureStore.production {
+        var credentials: [Credential: String] = [:]
+        for candidate in candidates.reversed() where !candidate.items.isEmpty {
+            let candidateCredentials = try decodeCredentials(from: candidate.items)
+            credentials.merge(candidateCredentials) { _, newerValue in newerValue }
+        }
+
+        if candidates.first?.items.isEmpty == true {
             try saveCredentialVault(credentials)
         }
 
