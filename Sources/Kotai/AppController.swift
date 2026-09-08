@@ -158,26 +158,45 @@ final class AppController {
     }
 
     func managedUsage(for mode: AccountMode, days: Int) async throws -> (connection: ManagedAccountConnection, credits: OpenRouterCredits, usage: WorkspaceUsage, openAICost: Double?) {
-        guard let connection = try await configuration.managedConnection(for: mode),
-              let credentials = try await configuration.managedCredentials(for: mode)
-        else { throw AdministrationAPIError.forbidden("This setup is not managed yet.") }
-        async let credits = openRouterManagementClient.credits(managementKey: credentials.managementKey)
-        async let usage = openRouterManagementClient.workspaceUsage(
-            workspaceID: connection.openRouterWorkspace.id,
-            managementKey: credentials.managementKey,
-            days: days
+        let account = mode == .personal ? "personal" : "work"
+        KotaiLogger.shared.info(
+            "Usage refresh started; account=\(account) days=\(days)"
         )
-        async let openAICost: Double? = {
-            guard let projectID = connection.openAIProject?.id,
-                  let adminKey = credentials.adminKey,
-                  !adminKey.isEmpty else { return nil }
-            return try? await openAIAdministrationClient.projectCosts(
-                projectID: projectID,
-                adminKey: adminKey,
+        do {
+            guard let connection = try await configuration.managedConnection(for: mode),
+                  let credentials = try await configuration.managedCredentials(for: mode)
+            else {
+                throw AdministrationAPIError.forbidden("This setup is not managed yet.")
+            }
+            async let credits = openRouterManagementClient.credits(managementKey: credentials.managementKey)
+            async let usage = openRouterManagementClient.workspaceUsage(
+                workspaceID: connection.openRouterWorkspace.id,
+                managementKey: credentials.managementKey,
                 days: days
             )
-        }()
-        return try await (connection, credits, usage, openAICost)
+            async let openAICost: Double? = {
+                guard let projectID = connection.openAIProject?.id,
+                      let adminKey = credentials.adminKey,
+                      !adminKey.isEmpty else { return nil }
+                return try? await openAIAdministrationClient.projectCosts(
+                    projectID: projectID,
+                    adminKey: adminKey,
+                    days: days
+                )
+            }()
+            let result = try await (connection, credits, usage, openAICost)
+            KotaiLogger.shared.info(
+                "Usage refresh completed; account=\(account) days=\(days) "
+                    + "dailyRows=\(result.2.daily.count) modelRows=\(result.2.models.count)"
+            )
+            return result
+        } catch {
+            KotaiLogger.shared.error(
+                "Usage refresh failed; account=\(account) days=\(days) "
+                    + "error=\(error.localizedDescription)"
+            )
+            throw error
+        }
     }
 
     func requiresManagedSetupUpgrade() async -> Bool {

@@ -165,25 +165,29 @@ struct OpenRouterManagementClient: Sendable {
     ) async throws -> WorkspaceUsage {
         let end = Date()
         let start = Calendar(identifier: .gregorian).date(byAdding: .day, value: -days, to: end)!
-        async let daily: AnalyticsResponse = request(
-            path: "analytics/query", method: "POST", key: managementKey,
+        async let daily = requestAnalytics(
+            key: managementKey,
             body: Self.analyticsBody(
                 start: start,
                 end: end,
                 workspaceID: workspaceID,
                 dimensions: ["workspace"],
                 granularity: "day"
-            )
+            ),
+            dimensions: ["workspace"],
+            granularity: "day"
         )
-        async let models: AnalyticsResponse = request(
-            path: "analytics/query", method: "POST", key: managementKey,
+        async let models = requestAnalytics(
+            key: managementKey,
             body: Self.analyticsBody(
                 start: start,
                 end: end,
                 workspaceID: workspaceID,
                 dimensions: ["model"],
                 granularity: nil
-            )
+            ),
+            dimensions: ["model"],
+            granularity: nil
         )
         return try parseUsage(daily: await daily, models: await models)
     }
@@ -247,6 +251,76 @@ struct OpenRouterManagementClient: Sendable {
         let formatter = DateFormatter(); formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"; formatter.timeZone = TimeZone(secondsFromGMT: 0); return formatter
     }()
+
+    static func analyticsLogContext(
+        dimensions: [String],
+        granularity: String?
+    ) -> String {
+        let dimensionList = dimensions.joined(separator: ",")
+        return "dimensions=\(dimensionList) granularity=\(granularity ?? "none")"
+    }
+
+    private func requestAnalytics(
+        key: String,
+        body: [String: Any],
+        dimensions: [String],
+        granularity: String?
+    ) async throws -> AnalyticsResponse {
+        let requestID = String(UUID().uuidString.prefix(8))
+        let context = Self.analyticsLogContext(
+            dimensions: dimensions,
+            granularity: granularity
+        )
+        KotaiLogger.shared.info(
+            "Usage analytics \(requestID) started; \(context)"
+        )
+
+        let data: Data
+        let response: HTTPURLResponse
+        do {
+            (data, response) = try await perform(
+                path: "analytics/query",
+                method: "POST",
+                key: key,
+                body: body
+            )
+        } catch {
+            KotaiLogger.shared.error(
+                "Usage analytics \(requestID) transport failed; \(context) "
+                    + "error=\(error.localizedDescription)"
+            )
+            throw error
+        }
+        guard (200..<300).contains(response.statusCode) else {
+            KotaiLogger.shared.error(
+                "Usage analytics \(requestID) failed; \(context) "
+                    + "status=\(response.statusCode) responseBytes=\(data.count)"
+            )
+            try validate(response: response, data: data, service: "OpenRouter")
+            throw AdministrationAPIError.invalidResponse
+        }
+
+        do {
+            let analyticsResponse = try JSONDecoder.snakeCase.decode(
+                AnalyticsResponse.self,
+                from: data
+            )
+            KotaiLogger.shared.info(
+                "Usage analytics \(requestID) completed; \(context) "
+                    + "status=\(response.statusCode) responseBytes=\(data.count) "
+                    + "rows=\(analyticsResponse.data.count) "
+                    + "truncated=\(analyticsResponse.metadata?.truncated == true)"
+            )
+            return analyticsResponse
+        } catch {
+            KotaiLogger.shared.error(
+                "Usage analytics \(requestID) decode failed; \(context) "
+                    + "status=\(response.statusCode) responseBytes=\(data.count) "
+                    + "error=\(error.localizedDescription)"
+            )
+            throw AdministrationAPIError.invalidResponse
+        }
+    }
 
     private func request<T: Decodable>(
         path: String, method: String = "GET", key: String, body: [String: Any]? = nil

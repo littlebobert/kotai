@@ -373,6 +373,17 @@ struct ManagedAccountConfigurationTests {
         #expect(json["granularity"] as? String == "day")
     }
 
+    @Test
+    func analyticsLogContextIncludesShapeWithoutIdentifiers() {
+        let context = OpenRouterManagementClient.analyticsLogContext(
+            dimensions: ["model"],
+            granularity: "day"
+        )
+
+        #expect(context == "dimensions=model granularity=day")
+        #expect(!context.contains("workspace-id"))
+    }
+
     @Test @MainActor
     func usageMenuBarPreferencesPersist() {
         let suite = "UsageMenuBarSettingsTests-\(UUID().uuidString)"
