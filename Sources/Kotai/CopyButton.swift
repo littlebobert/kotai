@@ -33,16 +33,8 @@ struct CopyButton: View {
     @ViewBuilder
     private var buttonLabel: some View {
         if compact {
-            ZStack(alignment: reservedAlignment) {
-                Label("Copied", systemImage: "checkmark")
-                    .labelStyle(.titleAndIcon)
-                    .hidden()
-                Image(systemName: "doc.on.doc")
-                    .opacity(isShowingConfirmation ? 0 : 1)
-                Label("Copied", systemImage: "checkmark")
-                    .labelStyle(.titleAndIcon)
-                    .opacity(isShowingConfirmation ? 1 : 0)
-            }
+            Image(systemName: isShowingConfirmation ? "checkmark" : "doc.on.doc")
+                .frame(width: 16, height: 16, alignment: reservedAlignment)
         } else {
             ZStack(alignment: reservedAlignment) {
                 Label(label, systemImage: "doc.on.doc")

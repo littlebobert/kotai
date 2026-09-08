@@ -1,8 +1,16 @@
 import SwiftUI
 
 struct SettingsView: View {
+    private enum Tab: Hashable {
+        case keys
+        case routing
+        case ngrok
+    }
+
     let controller: AppController
 
+    @Environment(\.openURL) private var openURL
+    @State private var selectedTab = Tab.keys
     @State private var personalOpenRouterKey = ""
     @State private var workOpenRouterKey = ""
     @State private var proxyToken = ""
@@ -31,18 +39,21 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView {
+            TabView(selection: $selectedTab) {
                 accountsTab
+                    .tag(Tab.keys)
                     .tabItem {
                         Label("Keys", systemImage: "person.2")
                     }
 
                 routingTab
+                    .tag(Tab.routing)
                     .tabItem {
                         Label("Routing", systemImage: "arrow.triangle.branch")
                     }
 
                 connectionTab
+                    .tag(Tab.ngrok)
                     .tabItem {
                         Label("ngrok", systemImage: "network")
                     }
@@ -57,12 +68,38 @@ struct SettingsView: View {
             WindowTitleSetter(title: String(localized: "Kotai Settings"))
                 .frame(width: 0, height: 0)
         }
+        .overlay {
+            settingsTabKeyboardShortcuts
+        }
         .task {
             await load()
         }
         .onDisappear {
             savedMessageTask?.cancel()
         }
+    }
+
+    private var settingsTabKeyboardShortcuts: some View {
+        Group {
+            Button("Show Keys") {
+                selectedTab = .keys
+            }
+            .keyboardShortcut("1", modifiers: .command)
+
+            Button("Show Routing") {
+                selectedTab = .routing
+            }
+            .keyboardShortcut("2", modifiers: .command)
+
+            Button("Show ngrok") {
+                selectedTab = .ngrok
+            }
+            .keyboardShortcut("3", modifiers: .command)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
     }
 
     private var accountsTab: some View {
@@ -175,11 +212,12 @@ struct SettingsView: View {
                         Text("For example: your-static-ngrok-identifier.ngrok-free.dev")
                             .font(.caption)
                             .foregroundStyle(.tertiary)
-                        Text(connectionDraft.validationError ?? " ")
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .lineLimit(1)
-                            .accessibilityHidden(connectionDraft.validationError == nil)
+                        if let validationError = connectionDraft.validationError {
+                            Text(validationError)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                                .lineLimit(1)
+                        }
                     }
 
                     HStack(spacing: 12) {
@@ -194,10 +232,11 @@ struct SettingsView: View {
                                 .controlSize(.small)
                         }
 
-                        Link(
-                            "Open ngrok Domains",
-                            destination: URL(string: "https://dashboard.ngrok.com/domains")!
-                        )
+                        Button("Open ngrok Domains") {
+                            openURL(
+                                URL(string: "https://dashboard.ngrok.com/domains")!
+                            )
+                        }
                         Spacer()
                     }
 

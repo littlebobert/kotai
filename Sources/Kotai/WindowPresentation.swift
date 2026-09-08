@@ -1,4 +1,5 @@
 import AppKit
+import Observation
 import SwiftUI
 
 @MainActor
@@ -29,13 +30,45 @@ func presentSettingsWindow(openSettings: OpenSettingsAction) {
 }
 
 @MainActor
+private func presentSettingsWindowUsingResponderChain() {
+    activateApplication()
+    NSApplication.shared.sendAction(
+        Selector(("showSettingsWindow:")),
+        to: nil,
+        from: nil
+    )
+
+    Task { @MainActor in
+        try? await Task.sleep(for: .milliseconds(150))
+        let expectedTitles = [
+            String(localized: "Kotai Settings"),
+            String(localized: "Kotai Setup"),
+        ]
+        let settingsWindow = NSApplication.shared.windows.first { window in
+            expectedTitles.contains(window.title)
+        }
+        settingsWindow?.makeKeyAndOrderFront(nil)
+    }
+}
+
+@MainActor
 final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
+    let controller = AppController()
+
     private var aboutWindowController: AboutWindowController?
     private var diagnosticsWindowController: DiagnosticsWindowController?
-    private weak var controller: AppController?
+    private var hasPresentedInitialSetup = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.regular)
+        guard ApplicationLaunchEnvironment.shouldStartRuntime(
+            environment: ProcessInfo.processInfo.environment
+        ) else {
+            return
+        }
+        observeSetupRequirement()
+        controller.start()
+        presentDiagnostics()
     }
 
     func applicationShouldHandleReopen(
@@ -46,16 +79,6 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    func configure(controller: AppController) {
-        guard self.controller !== controller else {
-            return
-        }
-        self.controller = controller
-        diagnosticsWindowController = DiagnosticsWindowController(
-            controller: controller
-        )
-    }
-
     func presentAbout() {
         if aboutWindowController == nil {
             aboutWindowController = AboutWindowController()
@@ -64,9 +87,6 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func presentDiagnostics() {
-        guard let controller else {
-            return
-        }
         if diagnosticsWindowController == nil {
             diagnosticsWindowController = DiagnosticsWindowController(
                 controller: controller
@@ -74,13 +94,36 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         }
         diagnosticsWindowController?.present()
     }
+
+    private func observeSetupRequirement() {
+        withObservationTracking {
+            _ = controller.isSetupRequired
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                guard let self else {
+                    return
+                }
+                self.observeSetupRequirement()
+                self.presentInitialSetupIfNeeded()
+            }
+        }
+    }
+
+    private func presentInitialSetupIfNeeded() {
+        guard controller.isSetupRequired, !hasPresentedInitialSetup else {
+            return
+        }
+        hasPresentedInitialSetup = true
+        controller.beginSetupWizard()
+        presentSettingsWindowUsingResponderChain()
+    }
 }
 
 @MainActor
 private final class AboutWindowController: NSWindowController {
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 250),
+            contentRect: NSRect(x: 0, y: 0, width: 292, height: 250),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -126,6 +169,10 @@ private final class DiagnosticsWindowController: NSWindowController {
         )
         window.minSize = NSSize(width: 560, height: 360)
         window.isReleasedWhenClosed = false
+        window.setFrameAutosaveName("KotaiDiagnosticsWindow")
+        if !window.setFrameUsingName("KotaiDiagnosticsWindow") {
+            window.center()
+        }
         window.contentView = NSHostingView(
             rootView: DiagnosticsView(controller: controller)
         )

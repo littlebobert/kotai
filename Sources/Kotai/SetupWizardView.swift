@@ -284,6 +284,7 @@ struct SetupWizardView: View {
                 Button("Back") {
                     moveBackward()
                 }
+                .keyboardShortcut(.cancelAction)
                 .disabled(isSaving)
             }
 
@@ -309,6 +310,7 @@ struct SetupWizardView: View {
                 .frame(minWidth: 72)
             }
             .buttonStyle(WizardPrimaryButtonStyle())
+            .keyboardShortcut(.defaultAction)
             .disabled(isLoading || isSaving || !canContinue)
         }
         .padding(20)

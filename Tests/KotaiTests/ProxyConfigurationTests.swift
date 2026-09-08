@@ -1,8 +1,10 @@
+import AppKit
 import AsyncHTTPClient
 import Foundation
 import Hummingbird
 import HummingbirdTesting
 import NIOCore
+import SwiftUI
 import Testing
 @testable import Kotai
 
@@ -162,6 +164,90 @@ struct ProxyConfigurationTests {
         )
     }
 
+
+    @Test @MainActor
+    func nativeLogViewerHandlesRapidShrinkingTextUpdates() {
+        var followsLatestEntry = false
+        let followsLatestEntryBinding = Binding(
+            get: { followsLatestEntry },
+            set: { followsLatestEntry = $0 }
+        )
+        let scrollView = NSScrollView()
+        let textView = NSTextView()
+        scrollView.documentView = textView
+        let coordinator = NativeLogTextView.Coordinator(
+            followsLatestEntry: followsLatestEntryBinding
+        )
+        coordinator.connect(scrollView: scrollView, textView: textView)
+        defer { coordinator.disconnect() }
+
+        coordinator.update(
+            text: "a long diagnostic line with a selected suffix",
+            followsLatestEntry: false,
+            scrollToLatestRequest: 0
+        )
+        textView.setSelectedRange(NSRange(location: 36, length: 8))
+
+        for text in ["warning", "w", "", "error"] {
+            coordinator.update(
+                text: text,
+                followsLatestEntry: false,
+                scrollToLatestRequest: 0
+            )
+            #expect(textView.string == text)
+        }
+    }
+
+    @Test
+    func diagnosticLogFilterIncludesSelectedLevelsAndUnclassifiedText() {
+        let logText = """
+        heading
+        2026-01-01T00:00:00Z [INFO] connected
+        2026-01-01T00:00:01Z [WARN] delayed
+        2026-01-01T00:00:02Z [ERRO] stopped
+        """
+
+        let filteredText = DiagnosticLogFilter.filteredText(
+            logText,
+            selectedLevels: [.warning]
+        )
+
+        #expect(filteredText.contains("heading"))
+        #expect(filteredText.contains("[WARN] delayed"))
+        #expect(!filteredText.contains("[INFO] connected"))
+        #expect(!filteredText.contains("[ERRO] stopped"))
+    }
+
+    @Test
+    func diagnosticLogFilterMatchesTextCaseInsensitively() {
+        let logText = """
+        2026-01-01T00:00:00Z [INFO] Connected to OpenRouter
+        2026-01-01T00:00:01Z [WARN] Slow response
+        2026-01-01T00:00:02Z [ERRO] Connection stopped
+        """
+
+        let filteredText = DiagnosticLogFilter.filteredText(
+            logText,
+            selectedLevels: [.info, .warning],
+            query: "CONnect"
+        )
+
+        #expect(filteredText.contains("[INFO] Connected"))
+        #expect(!filteredText.contains("[WARN] Slow"))
+        #expect(!filteredText.contains("[ERRO] Connection"))
+    }
+
+    @Test
+    func diagnosticLogFilterReturnsOriginalTextWhenAllLevelsSelected() {
+        let logText = "2026-01-01T00:00:00Z [DEBG] payload"
+
+        #expect(
+            DiagnosticLogFilter.filteredText(
+                logText,
+                selectedLevels: Set(DiagnosticLogLevel.allCases)
+            ) == logText
+        )
+    }
 
     @Test
     func diagnosticLogLevelPrefixesUseFourCharacters() {

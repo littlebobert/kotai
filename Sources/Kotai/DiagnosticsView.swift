@@ -5,8 +5,18 @@ struct DiagnosticsView: View {
     let controller: AppController
 
     @State private var logText = ""
+    @State private var selectedLevels = Set(DiagnosticLogLevel.allCases)
+    @State private var filterQuery = ""
+    @State private var followsLatestEntry = true
+    @State private var scrollToLatestRequest = 0
 
-    private let logBottomID = "diagnostics-log-bottom"
+    private var filteredLogText: String {
+        DiagnosticLogFilter.filteredText(
+            logText,
+            selectedLevels: selectedLevels,
+            query: filterQuery
+        )
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -17,10 +27,8 @@ struct DiagnosticsView: View {
             .foregroundStyle(statusColor)
 
             if let publicURL = controller.configuredPublicURL() {
-                LabeledContent("ngrok") {
-                    Text(publicURL.host ?? publicURL.absoluteString)
-                        .textSelection(.enabled)
-                }
+                Text("ngrok active at \(publicURL.absoluteString)")
+                    .textSelection(.enabled)
             }
 
             if let statusDetail = controller.statusDetail {
@@ -31,44 +39,66 @@ struct DiagnosticsView: View {
 
             Divider()
 
-            Text("Recent activity")
-                .font(.headline)
+            HStack {
+                Text("Recent activity")
+                    .font(.headline)
 
-            ScrollViewReader { scrollProxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(logText)
-                            .font(.system(size: 11, design: .monospaced))
-                            .textSelection(.enabled)
-                            .frame(
-                                maxWidth: .infinity,
-                                alignment: .topLeading
-                            )
-                            .padding(10)
+                Spacer()
 
-                        Color.clear
-                            .frame(height: 1)
-                            .id(logBottomID)
+                TextField("Filter logs", text: $filterQuery)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 180)
+
+                Menu {
+                    ForEach(DiagnosticLogLevel.allCases) { level in
+                        Toggle(level.displayName, isOn: binding(for: level))
                     }
+                    Divider()
+                    Button("Show All") {
+                        selectedLevels = Set(DiagnosticLogLevel.allCases)
+                    }
+                } label: {
+                    Label("Levels", systemImage: "line.3.horizontal.decrease.circle")
                 }
-                .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-                .onAppear {
-                    scrollToMostRecent(using: scrollProxy)
-                }
-                .onChange(of: logText) {
-                    scrollToMostRecent(using: scrollProxy)
-                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+            }
+
+            NativeLogTextView(
+                text: filteredLogText,
+                followsLatestEntry: $followsLatestEntry,
+                scrollToLatestRequest: scrollToLatestRequest
+            )
+            .background(
+                Color(nsColor: .textBackgroundColor),
+                in: RoundedRectangle(cornerRadius: 8)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(nsColor: .separatorColor), lineWidth: 1)
             }
 
             HStack {
                 Button("Copy Log") {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(logText, forType: .string)
+                    NSPasteboard.general.setString(
+                        filteredLogText,
+                        forType: .string
+                    )
                 }
                 Button("Report a bug…") {
                     BugReporter.composeEmail()
                 }
                 Spacer()
+                Text(followsLatestEntry ? "Following latest" : "Follow paused")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                if !followsLatestEntry {
+                    Button("Resume Autoscroll") {
+                        scrollToLatestRequest += 1
+                    }
+                    .help("Resume following new log entries")
+                }
                 Button("Refresh") {
                     refresh()
                 }
@@ -102,13 +132,77 @@ struct DiagnosticsView: View {
         }
     }
 
+    private func binding(for level: DiagnosticLogLevel) -> Binding<Bool> {
+        Binding(
+            get: { selectedLevels.contains(level) },
+            set: { isSelected in
+                if isSelected {
+                    selectedLevels.insert(level)
+                } else {
+                    selectedLevels.remove(level)
+                }
+            }
+        )
+    }
+
     private func refresh() {
         logText = KotaiLogger.shared.recentLogText()
     }
+}
 
-    private func scrollToMostRecent(using scrollProxy: ScrollViewProxy) {
-        Task { @MainActor in
-            scrollProxy.scrollTo(logBottomID, anchor: .bottom)
+enum DiagnosticLogLevel: String, CaseIterable, Identifiable {
+    case debug = "DEBG"
+    case info = "INFO"
+    case warning = "WARN"
+    case error = "ERRO"
+
+    var id: Self { self }
+
+    var displayName: String {
+        switch self {
+        case .debug:
+            String(localized: "Debug")
+        case .info:
+            String(localized: "Info")
+        case .warning:
+            String(localized: "Warnings")
+        case .error:
+            String(localized: "Errors")
+        }
+    }
+}
+
+enum DiagnosticLogFilter {
+    static func filteredText(
+        _ text: String,
+        selectedLevels: Set<DiagnosticLogLevel>,
+        query: String = ""
+    ) -> String {
+        let normalizedQuery = query.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let includesAllLevels = selectedLevels == Set(DiagnosticLogLevel.allCases)
+        guard !includesAllLevels || !normalizedQuery.isEmpty else {
+            return text
+        }
+
+        return text
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .filter { line in
+                if let level = level(in: line), !selectedLevels.contains(level) {
+                    return false
+                }
+                guard !normalizedQuery.isEmpty else {
+                    return true
+                }
+                return line.localizedCaseInsensitiveContains(normalizedQuery)
+            }
+            .joined(separator: "\n")
+    }
+
+    private static func level(in line: Substring) -> DiagnosticLogLevel? {
+        DiagnosticLogLevel.allCases.first { level in
+            line.contains("[\(level.rawValue)]")
         }
     }
 }
