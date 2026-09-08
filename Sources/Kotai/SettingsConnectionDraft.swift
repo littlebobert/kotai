@@ -32,9 +32,6 @@ struct SettingsConnectionDraft: Equatable {
     }
 
     var canRestartNgrok: Bool {
-        guard normalizedURL != nil, hasCompleteCredentials else {
-            return false
-        }
-        return isCanonicalURLChanged || runtimeStatus != .running
+        normalizedURL != nil
     }
 }

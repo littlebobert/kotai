@@ -313,6 +313,50 @@ struct ProxyConfigurationTests {
     }
 }
 
+struct ManagedAccountConfigurationTests {
+    @Test
+    func managedConnectionRoundTripsThroughCredentialVault() async throws {
+        let connection = ManagedAccountConnection(
+            openRouterWorkspace: OpenRouterWorkspace(id: "workspace", name: "Personal", slug: "personal"),
+            openRouterKeyHash: "hash", openRouterKeyName: "Kotai Personal",
+            openAIProject: OpenAIProject(id: "project", name: "Default"),
+            openAIServiceAccountID: "service", openAIServiceAccountName: "Kotai Personal",
+            openRouterBYOKCredentialID: "byok"
+        )
+        let configuration = ProxyConfiguration(initialCredentials: [:])
+        try await configuration.commitManagedAccounts([
+            StagedManagedAccount(
+                draft: ManagedAccountDraft(
+                    accountMode: .personal,
+                    openRouterManagementKey: "management",
+                    openAIAdminKey: "admin",
+                    openRouterWorkspace: connection.openRouterWorkspace,
+                    openAIProject: connection.openAIProject
+                ),
+                connection: connection,
+                inferenceKey: "inference"
+            )
+        ])
+        #expect(try await configuration.managedConnection(for: .personal) == connection)
+        #expect(try await configuration.openRouterKey(for: .personal) == "inference")
+        let credentials = try #require(try await configuration.managedCredentials(for: .personal))
+        #expect(credentials.managementKey == "management")
+        #expect(credentials.adminKey == "admin")
+    }
+
+    @Test @MainActor
+    func usageMenuBarPreferencesPersist() {
+        let suite = "UsageMenuBarSettingsTests-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let settings = UsageMenuBarSettings(defaults: defaults)
+        settings.isEnabled = true; settings.account = .personal
+        let reloaded = UsageMenuBarSettings(defaults: defaults)
+        #expect(reloaded.isEnabled)
+        #expect(reloaded.account == .personal)
+    }
+}
+
 struct ProxyConfigurationMigrationTests {
     @Test
     func legacyVaultMigratesAsOneCompleteWriteAndRemainsForRollback() async throws {

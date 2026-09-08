@@ -8,6 +8,9 @@ struct SettingsView: View {
     }
 
     let controller: AppController
+    let usageMenuBarSettings: UsageMenuBarSettings
+    let usageMenuBarSettingsDidChange: () -> Void
+    let openSetup: () -> Void
 
     @Environment(\.openURL) private var openURL
     @State private var selectedTab = Tab.keys
@@ -17,6 +20,8 @@ struct SettingsView: View {
     @State private var ngrokStaticURL = ""
     @State private var ngrokPublicURL: URL?
     @State private var hasCompleteCredentials = false
+    @State private var personalManagedConnection: ManagedAccountConnection?
+    @State private var workManagedConnection: ManagedAccountConnection?
     @State private var editingCredential: ProxyConfiguration.Credential?
     @State private var credentialDraft = ""
     @State private var errorMessage: String?
@@ -39,26 +44,26 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $selectedTab) {
-                accountsTab
-                    .tag(Tab.keys)
-                    .tabItem {
-                        Label("Keys", systemImage: "person.2")
-                    }
-
-                routingTab
-                    .tag(Tab.routing)
-                    .tabItem {
-                        Label("Routing", systemImage: "arrow.triangle.branch")
-                    }
-
-                connectionTab
-                    .tag(Tab.ngrok)
-                    .tabItem {
-                        Label("ngrok", systemImage: "network")
-                    }
+            Picker("Settings section", selection: $selectedTab) {
+                Label("Keys", systemImage: "key").tag(Tab.keys)
+                Label("Routing", systemImage: "arrow.triangle.branch").tag(Tab.routing)
+                Label("ngrok", systemImage: "network").tag(Tab.ngrok)
             }
-            .frame(height: 415)
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 330)
+            .padding(.vertical, 12)
+
+            Divider()
+
+            Group {
+                switch selectedTab {
+                case .keys: accountsTab
+                case .routing: routingTab
+                case .ngrok: connectionTab
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             Divider()
             statusFooter
@@ -68,9 +73,6 @@ struct SettingsView: View {
             WindowTitleSetter(title: String(localized: "Kotai Settings"))
                 .frame(width: 0, height: 0)
         }
-        .overlay {
-            settingsTabKeyboardShortcuts
-        }
         .task {
             await load()
         }
@@ -79,31 +81,9 @@ struct SettingsView: View {
         }
     }
 
-    private var settingsTabKeyboardShortcuts: some View {
-        Group {
-            Button("Show Keys") {
-                selectedTab = .keys
-            }
-            .keyboardShortcut("1", modifiers: .command)
-
-            Button("Show Routing") {
-                selectedTab = .routing
-            }
-            .keyboardShortcut("2", modifiers: .command)
-
-            Button("Show ngrok") {
-                selectedTab = .ngrok
-            }
-            .keyboardShortcut("3", modifiers: .command)
-        }
-        .buttonStyle(.plain)
-        .frame(width: 0, height: 0)
-        .opacity(0)
-        .accessibilityHidden(true)
-    }
-
     private var accountsTab: some View {
-        tabContent {
+        ScrollView {
+            VStack(spacing: 12) {
             GroupBox("OpenRouter setups") {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(
@@ -113,12 +93,14 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
+                    managedAccountSummary("Personal", connection: personalManagedConnection)
                     credentialRow(
                         credential: .personalOpenRouterKey,
                         label: "Personal OpenRouter API key",
                         value: personalOpenRouterKey,
                         prompt: "Paste your personal OpenRouter API key"
                     )
+                    managedAccountSummary("Work", connection: workManagedConnection)
                     credentialRow(
                         credential: .workOpenRouterKey,
                         label: "Work OpenRouter API key",
@@ -129,6 +111,23 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(6)
             }
+            GroupBox("Usage Statistics") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Toggle("Show 30-day workspace spend in the menu bar", isOn: Binding(
+                        get: { usageMenuBarSettings.isEnabled },
+                        set: { usageMenuBarSettings.isEnabled = $0; usageMenuBarSettingsDidChange() }
+                    ))
+                    Picker("Account", selection: Binding(
+                        get: { usageMenuBarSettings.account },
+                        set: { usageMenuBarSettings.account = $0; usageMenuBarSettingsDidChange() }
+                    )) {
+                        ForEach(UsageMenuBarAccount.allCases) { Text($0.displayName).tag($0) }
+                    }
+                    .disabled(!usageMenuBarSettings.isEnabled)
+                }.padding(6).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            }
+            .padding(20)
         }
     }
 
@@ -260,7 +259,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     Button("Start Setup Wizard again…") {
-                        controller.beginSetupWizard()
+                        openSetup()
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -299,6 +298,27 @@ struct SettingsView: View {
                 maxHeight: .infinity,
                 alignment: .top
             )
+    }
+
+    private func managedAccountDescription(_ title: String, connection: ManagedAccountConnection) -> String {
+        guard let project = connection.openAIProject else {
+            return "\(title): \(connection.openRouterWorkspace.name) · OpenRouter credits"
+        }
+        return "\(title): \(connection.openRouterWorkspace.name) · OpenAI \(project.name)"
+    }
+
+    private func managedAccountSummary(_ title: String, connection: ManagedAccountConnection?) -> some View {
+        Group {
+            if let connection {
+                Label(managedAccountDescription(title, connection: connection), systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                    .font(.callout)
+            } else {
+                Label("\(title): manually configured", systemImage: "key")
+                    .foregroundStyle(.secondary)
+                    .font(.callout)
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -368,12 +388,16 @@ struct SettingsView: View {
             async let storedProxyToken = controller.loadCredential(.proxyToken)
             async let storedStaticURL = controller.confirmedStaticURL()
             async let credentialsComplete = controller.hasCompleteSettingsCredentials()
+            async let personalConnection = controller.managedConnection(for: .personal)
+            async let workConnection = controller.managedConnection(for: .work)
 
             personalOpenRouterKey = try await personalKey
             workOpenRouterKey = try await workKey
             proxyToken = try await storedProxyToken
             ngrokPublicURL = try await storedStaticURL
             hasCompleteCredentials = try await credentialsComplete
+            personalManagedConnection = try await personalConnection
+            workManagedConnection = try await workConnection
             ngrokStaticURL = ngrokPublicURL?.absoluteString ?? ""
         } catch {
             errorMessage = error.localizedDescription
@@ -433,7 +457,10 @@ struct SettingsView: View {
             workOpenRouterKey = value
         case .proxyToken:
             proxyToken = value
-        case .ngrokAuthtoken, .ngrokStaticURL:
+        case .ngrokAuthtoken, .ngrokStaticURL,
+             .personalOpenRouterManagementKey, .personalOpenAIAdminKey,
+             .personalManagedConnection, .workOpenRouterManagementKey,
+             .workOpenAIAdminKey, .workManagedConnection:
             break
         }
     }

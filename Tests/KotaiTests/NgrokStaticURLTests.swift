@@ -192,7 +192,7 @@ struct NgrokStaticURLTests {
     }
 
     @Test @MainActor
-    func sameCanonicalURLDoesNotEnableRestartWhileRunning() {
+    func configuredURLAllowsManualRestartWhileRunning() {
         let draft = SettingsConnectionDraft(
             rawValue: " HTTPS://EXAMPLE.NGROK.APP/ ",
             confirmedURL: URL(string: "https://example.ngrok.app"),
@@ -201,7 +201,7 @@ struct NgrokStaticURLTests {
         )
 
         #expect(!draft.isCanonicalURLChanged)
-        #expect(!draft.canRestartNgrok)
+        #expect(draft.canRestartNgrok)
     }
 
     @Test @MainActor
@@ -244,7 +244,7 @@ struct NgrokStaticURLTests {
     }
 
     @Test @MainActor
-    func incompleteCredentialsDisableRestart() {
+    func configuredURLAllowsRestartBeforeCredentialRefreshCompletes() {
         let draft = SettingsConnectionDraft(
             rawValue: "https://new.ngrok.app",
             confirmedURL: URL(string: "https://old.ngrok.app"),
@@ -252,7 +252,7 @@ struct NgrokStaticURLTests {
             hasCompleteCredentials: false
         )
 
-        #expect(!draft.canRestartNgrok)
+        #expect(draft.canRestartNgrok)
     }
 
 }

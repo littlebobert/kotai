@@ -7,11 +7,12 @@ struct KotaiApp: App {
 
     var body: some Scene {
         Settings {
-            if appDelegate.controller.shouldShowSetupWizard {
-                SetupWizardView(controller: appDelegate.controller)
-            } else {
-                SettingsView(controller: appDelegate.controller)
-            }
+            SettingsView(
+                controller: appDelegate.controller,
+                usageMenuBarSettings: appDelegate.usageMenuBarSettings,
+                usageMenuBarSettingsDidChange: appDelegate.usageMenuBarSettingsDidChange,
+                openSetup: appDelegate.presentSetup
+            )
         }
         .commands {
             KotaiCommands(

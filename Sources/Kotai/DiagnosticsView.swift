@@ -3,6 +3,7 @@ import SwiftUI
 
 struct DiagnosticsView: View {
     let controller: AppController
+    let openSetup: () -> Void
 
     @State private var logText = ""
     @State private var selectedLevels = Set(DiagnosticLogLevel.allCases)
@@ -20,11 +21,23 @@ struct DiagnosticsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Label(
-                controller.runtimeStatus.displayName,
-                systemImage: controller.runtimeStatus.symbolName
-            )
-            .foregroundStyle(statusColor)
+            if controller.runtimeStatus == .needsConfiguration {
+                Button(action: openSetup) {
+                    Label(
+                        controller.runtimeStatus.displayName,
+                        systemImage: controller.runtimeStatus.symbolName
+                    )
+                }
+                .buttonStyle(.link)
+                .foregroundStyle(statusColor)
+                .help("Open Kotai Setup")
+            } else {
+                Label(
+                    controller.runtimeStatus.displayName,
+                    systemImage: controller.runtimeStatus.symbolName
+                )
+                .foregroundStyle(statusColor)
+            }
 
             if let publicURL = controller.configuredPublicURL() {
                 Text("ngrok active at \(publicURL.absoluteString)")

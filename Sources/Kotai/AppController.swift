@@ -57,6 +57,9 @@ final class AppController {
 
     private let configuration: ProxyConfiguration
     private let ngrokManager = NgrokManager()
+    private let openRouterManagementClient = OpenRouterManagementClient()
+    private let openAIAdministrationClient = OpenAIAdministrationClient()
+    private let managedAccountProvisioner = ManagedAccountProvisioner()
     private let httpClient: HTTPClient
     private var proxyTask: Task<Void, Never>?
     private var ngrokProcess: Process?
@@ -114,6 +117,81 @@ final class AppController {
     func recordSuccessfulSetup() {
         isSetupRequired = false
         runtimeStatus = Self.successfulSetupRuntimeStatus
+    }
+
+
+    func managedConnection(for mode: AccountMode) async throws -> ManagedAccountConnection? {
+        try await configuration.managedConnection(for: mode)
+    }
+
+    func managedCredentialsAvailable(for mode: AccountMode) async throws -> Bool {
+        try await configuration.managedCredentials(for: mode) != nil
+    }
+
+    func openRouterWorkspaces(managementKey: String) async throws -> [OpenRouterWorkspace] {
+        try await openRouterManagementClient.listWorkspaces(managementKey: managementKey)
+    }
+
+    func createOpenRouterWorkspace(name: String, managementKey: String) async throws -> OpenRouterWorkspace {
+        try await openRouterManagementClient.createWorkspace(name: name, managementKey: managementKey)
+    }
+
+    func openAIProjects(adminKey: String) async throws -> [OpenAIProject] {
+        try await openAIAdministrationClient.listProjects(adminKey: adminKey)
+    }
+
+    func stageManagedAccount(_ draft: ManagedAccountDraft) async throws -> StagedManagedAccount {
+        try await managedAccountProvisioner.provision(draft)
+    }
+
+    func commitManagedAccounts(_ accounts: [StagedManagedAccount]) async throws {
+        do {
+            try await configuration.commitManagedAccounts(accounts)
+        } catch {
+            for account in accounts { await managedAccountProvisioner.cleanup(account) }
+            throw error
+        }
+    }
+
+    func discardManagedAccounts(_ accounts: [StagedManagedAccount]) async {
+        for account in accounts { await managedAccountProvisioner.cleanup(account) }
+    }
+
+    func managedUsage(for mode: AccountMode, days: Int) async throws -> (connection: ManagedAccountConnection, credits: OpenRouterCredits, usage: WorkspaceUsage, openAICost: Double?) {
+        guard let connection = try await configuration.managedConnection(for: mode),
+              let credentials = try await configuration.managedCredentials(for: mode)
+        else { throw AdministrationAPIError.forbidden("This setup is not managed yet.") }
+        async let credits = openRouterManagementClient.credits(managementKey: credentials.managementKey)
+        async let usage = openRouterManagementClient.workspaceUsage(
+            workspaceID: connection.openRouterWorkspace.id,
+            managementKey: credentials.managementKey,
+            days: days
+        )
+        async let openAICost: Double? = {
+            guard let projectID = connection.openAIProject?.id,
+                  let adminKey = credentials.adminKey,
+                  !adminKey.isEmpty else { return nil }
+            return try? await openAIAdministrationClient.projectCosts(
+                projectID: projectID,
+                adminKey: adminKey,
+                days: days
+            )
+        }()
+        return try await (connection, credits, usage, openAICost)
+    }
+
+    func requiresManagedSetupUpgrade() async -> Bool {
+        do {
+            let personalKey = try await loadCredential(.personalOpenRouterKey)
+            let workKey = try await loadCredential(.workOpenRouterKey)
+            let personalConnection = try await configuration.managedConnection(for: .personal)
+            let workConnection = try await configuration.managedConnection(for: .work)
+            let hasLegacyKeys = !personalKey.isEmpty && !workKey.isEmpty
+            let hasManagedAccounts = personalConnection != nil && workConnection != nil
+            return hasLegacyKeys && !hasManagedAccounts
+        } catch {
+            return false
+        }
     }
 
     func loadCredential(

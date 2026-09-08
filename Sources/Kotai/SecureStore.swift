@@ -96,6 +96,12 @@ struct SecureStore: Sendable {
             name: "personal-openrouter-key",
             role: "prior-personal-openrouter-key"
         )
+        static let personalOpenRouterManagementKey = Account(name: "personal-openrouter-management-key", role: "managed")
+        static let personalOpenAIAdminKey = Account(name: "personal-openai-admin-key", role: "managed")
+        static let personalManagedConnection = Account(name: "personal-managed-connection", role: "metadata")
+        static let workOpenRouterManagementKey = Account(name: "work-openrouter-management-key", role: "managed")
+        static let workOpenAIAdminKey = Account(name: "work-openai-admin-key", role: "managed")
+        static let workManagedConnection = Account(name: "work-managed-connection", role: "metadata")
         static let proxyToken = Account(
             name: "proxy-token",
             role: "prior-proxy-token"

@@ -27,8 +27,7 @@ struct KotaiCommands: Commands {
             .keyboardShortcut(",", modifiers: .command)
 
             Button("Run Setup…") {
-                controller.beginSetupWizard()
-                presentSettingsWindow(openSettings: openSettings)
+                appDelegate.presentSetup()
             }
         }
 
@@ -83,6 +82,10 @@ struct KotaiCommands: Commands {
                 appDelegate.presentDiagnostics()
             }
             .keyboardShortcut("d", modifiers: [.command, .shift])
+            Button("Usage Statistics") {
+                appDelegate.presentUsageStatistics()
+            }
+            .keyboardShortcut("u", modifiers: [.command, .shift])
         }
 
         CommandGroup(replacing: .help) {

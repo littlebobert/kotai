@@ -5,8 +5,14 @@ actor ProxyConfiguration {
         case ngrokAuthtoken
         case ngrokStaticURL
         case personalOpenRouterKey
+        case personalOpenRouterManagementKey
+        case personalOpenAIAdminKey
+        case personalManagedConnection
         case proxyToken
         case workOpenRouterKey
+        case workOpenRouterManagementKey
+        case workOpenAIAdminKey
+        case workManagedConnection
 
         var rawValue: String {
             storageAccount.name
@@ -28,8 +34,14 @@ actor ProxyConfiguration {
             case .ngrokAuthtoken: .ngrokAuthtoken
             case .ngrokStaticURL: .ngrokStaticURL
             case .personalOpenRouterKey: .personalOpenRouterKey
+            case .personalOpenRouterManagementKey: .personalOpenRouterManagementKey
+            case .personalOpenAIAdminKey: .personalOpenAIAdminKey
+            case .personalManagedConnection: .personalManagedConnection
             case .proxyToken: .proxyToken
             case .workOpenRouterKey: .workOpenRouterKey
+            case .workOpenRouterManagementKey: .workOpenRouterManagementKey
+            case .workOpenAIAdminKey: .workOpenAIAdminKey
+            case .workManagedConnection: .workManagedConnection
             }
         }
     }
@@ -75,6 +87,48 @@ actor ProxyConfiguration {
         case .work:
             try credential(.workOpenRouterKey)
         }
+    }
+
+
+    func managedConnection(for accountMode: AccountMode) throws -> ManagedAccountConnection? {
+        let credential: Credential = accountMode == .personal
+            ? .personalManagedConnection
+            : .workManagedConnection
+        guard let value = try self.credential(credential),
+              let data = value.data(using: .utf8)
+        else { return nil }
+        return try JSONDecoder().decode(ManagedAccountConnection.self, from: data)
+    }
+
+    func managedCredentials(for accountMode: AccountMode) throws -> (managementKey: String, adminKey: String?)? {
+        let management: Credential = accountMode == .personal ? .personalOpenRouterManagementKey : .workOpenRouterManagementKey
+        let admin: Credential = accountMode == .personal ? .personalOpenAIAdminKey : .workOpenAIAdminKey
+        guard let managementKey = try credential(management), !managementKey.isEmpty else { return nil }
+        let adminKey = try credential(admin)
+        return (managementKey, adminKey?.isEmpty == true ? nil : adminKey)
+    }
+
+    func commitManagedAccounts(_ accounts: [StagedManagedAccount]) throws {
+        var values: [Credential: String] = [:]
+        for stagedAccount in accounts {
+            let metadata = try JSONEncoder().encode(stagedAccount.connection)
+            guard let metadataString = String(data: metadata, encoding: .utf8) else {
+                throw SecureStoreError.invalidStoredValue
+            }
+            switch stagedAccount.draft.accountMode {
+            case .personal:
+                values[.personalOpenRouterKey] = stagedAccount.inferenceKey
+                values[.personalOpenRouterManagementKey] = stagedAccount.draft.openRouterManagementKey
+                values[.personalOpenAIAdminKey] = stagedAccount.draft.openAIAdminKey ?? ""
+                values[.personalManagedConnection] = metadataString
+            case .work:
+                values[.workOpenRouterKey] = stagedAccount.inferenceKey
+                values[.workOpenRouterManagementKey] = stagedAccount.draft.openRouterManagementKey
+                values[.workOpenAIAdminKey] = stagedAccount.draft.openAIAdminKey ?? ""
+                values[.workManagedConnection] = metadataString
+            }
+        }
+        try setCredentials(values)
     }
 
     private func loadCredentialVault() throws -> [Credential: String] {

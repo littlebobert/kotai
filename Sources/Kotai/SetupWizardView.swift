@@ -3,7 +3,9 @@ import SwiftUI
 
 struct SetupWizardView: View {
     private enum Step: Int, CaseIterable {
-        case openRouter
+        case upgrade
+        case personal
+        case work
         case ngrok
         case cursor
         case modelRouting
@@ -11,8 +13,12 @@ struct SetupWizardView: View {
 
         var title: String {
             switch self {
-            case .openRouter:
-                String(localized: "OpenRouter accounts")
+            case .upgrade:
+                String(localized: "What’s new")
+            case .personal:
+                String(localized: "Personal setup")
+            case .work:
+                String(localized: "Work setup")
             case .ngrok:
                 "ngrok"
             case .cursor:
@@ -26,9 +32,13 @@ struct SetupWizardView: View {
     }
 
     let controller: AppController
+    let onFinished: () -> Void
 
-    @Environment(\.dismiss) private var dismiss
-    @State private var currentStep = Step.openRouter
+    @State private var currentStep = Step.personal
+    @State private var isManagedUpgrade = false
+    @State private var personalStagedAccount: StagedManagedAccount?
+    @State private var workStagedAccount: StagedManagedAccount?
+    @State private var hasCommittedManagedAccounts = false
     @State private var personalOpenRouterKey = ""
     @State private var workOpenRouterKey = ""
     @State private var proxyToken = ""
@@ -64,26 +74,31 @@ struct SetupWizardView: View {
 
             if currentStep == .cursor {
                 cursorStep
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .topLeading
-                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .padding(28)
+            } else if currentStep == .personal {
+                ManagedAccountSetupView(mode: .personal, controller: controller) { stagedAccount in
+                    personalStagedAccount = stagedAccount
+                    currentStep = .work
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(28)
+            } else if currentStep == .work {
+                ManagedAccountSetupView(mode: .work, controller: controller) { stagedAccount in
+                    workStagedAccount = stagedAccount
+                    currentStep = .ngrok
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(28)
             } else {
                 ScrollView {
                     Group {
                         switch currentStep {
-                        case .openRouter:
-                            openRouterStep
-                        case .ngrok:
-                            ngrokStep
-                        case .cursor:
-                            EmptyView()
-                        case .modelRouting:
-                            modelRoutingStep
-                        case .support:
-                            supportStep
+                        case .upgrade: upgradeStep
+                        case .ngrok: ngrokStep
+                        case .modelRouting: modelRoutingStep
+                        case .support: supportStep
+                        case .personal, .work, .cursor: EmptyView()
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -92,8 +107,10 @@ struct SetupWizardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
-            Divider()
-            footer
+            if currentStep != .personal && currentStep != .work {
+                Divider()
+                footer
+            }
         }
         .frame(width: 620, height: currentStep == .cursor ? 640 : 520)
         .background {
@@ -102,6 +119,11 @@ struct SetupWizardView: View {
         }
         .task {
             await load()
+        }
+        .onDisappear {
+            guard !hasCommittedManagedAccounts else { return }
+            let stagedAccounts = [personalStagedAccount, workStagedAccount].compactMap { $0 }
+            Task { await controller.discardManagedAccounts(stagedAccounts) }
         }
     }
 
@@ -129,27 +151,13 @@ struct SetupWizardView: View {
         .padding(28)
     }
 
-    private var openRouterStep: some View {
+    private var upgradeStep: some View {
         VStack(alignment: .leading, spacing: 18) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.system(size: 42)).foregroundStyle(.tint)
             stepTitle(
-                "Add both OpenRouter keys",
-                detail: "Kotai keeps these in this Mac's Keychain. Every model-bearing request must select a key with a kotai/personal/ or kotai/work/ prefix."
-            )
-
-            labeledSecureField(
-                "Personal OpenRouter API key",
-                prompt: "Paste your personal OpenRouter API key",
-                text: $personalOpenRouterKey
-            )
-            labeledSecureField(
-                "Work OpenRouter API key",
-                prompt: "Paste your work OpenRouter API key",
-                text: $workOpenRouterKey
-            )
-
-            underlinedLink(
-                "Open OpenRouter",
-                destination: URL(string: "https://openrouter.ai")!
+                "Kotai can now help track your spending",
+                detail: "Your previous setup is still available while you create isolated Personal and Work workspaces, keys, and OpenAI BYOK connections. Kotai switches to the new setup only after each side succeeds."
             )
         }
     }
@@ -193,7 +201,7 @@ struct SetupWizardView: View {
                         normalizeNgrokStaticURLDraft()
                     }
                 }
-                StaticURLPrompt.example
+                Text("Example: your-free-static-domain.ngrok-free.dev")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                 underlinedLink(
@@ -254,65 +262,55 @@ struct SetupWizardView: View {
     }
 
     private var supportStep: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Image(systemName: "questionmark.circle")
-                .font(.system(size: 42))
-                .foregroundStyle(.tint)
-                .accessibilityHidden(true)
-
-            stepTitle(
-                "Support",
-                detail: "If you have issues, report a bug."
-            )
-
-            Button("Report a bug") {
-                BugReporter.composeEmail()
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Support").font(.title3.bold())
+            HStack(spacing: 4) {
+                Text("If you have issues or questions,")
+                Button("report a bug.") { BugReporter.composeEmail() }
+                    .buttonStyle(.link)
             }
-            .buttonStyle(.link)
-            .underline()
-
-            Text("Diagnostic logs and recent telemetry are attached. They exclude API keys, auth tokens, prompts, and response bodies.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var footer: some View {
-        HStack {
-            if currentStep != .openRouter {
-                Button("Back") {
-                    moveBackward()
+        ZStack {
+            HStack {
+                if currentStep != (isManagedUpgrade ? .upgrade : .personal)
+                    && currentStep != .personal && currentStep != .work {
+                    Button("Back") { moveBackward() }
+                        .keyboardShortcut(.cancelAction)
+                        .disabled(isSaving)
                 }
-                .keyboardShortcut(.cancelAction)
-                .disabled(isSaving)
-            }
 
-            Spacer()
+                Spacer()
+
+                if currentStep != .personal && currentStep != .work {
+                    Button {
+                        advance()
+                    } label: {
+                        HStack(spacing: 6) {
+                            if currentStep == .ngrok, isSaving {
+                                ProgressView().controlSize(.small)
+                            }
+                            Text(continueButtonTitle)
+                        }
+                        .frame(minWidth: 72)
+                    }
+                    .buttonStyle(WizardPrimaryButtonStyle())
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(isLoading || isSaving || !canContinue)
+                }
+            }
 
             if let errorMessage {
                 Text(errorMessage)
                     .font(.caption)
                     .foregroundStyle(.red)
                     .lineLimit(2)
+                    .padding(.horizontal, 110)
             }
-
-            Button {
-                advance()
-            } label: {
-                HStack(spacing: 6) {
-                    if currentStep == .ngrok, isSaving {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
-                    Text(continueButtonTitle)
-                }
-                .frame(minWidth: 72)
-            }
-            .buttonStyle(WizardPrimaryButtonStyle())
-            .keyboardShortcut(.defaultAction)
-            .disabled(isLoading || isSaving || !canContinue)
         }
+        .frame(maxWidth: .infinity)
         .padding(20)
     }
 
@@ -344,14 +342,15 @@ struct SetupWizardView: View {
             return false
         }
         switch currentStep {
-        case .openRouter:
-            return !personalOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                && !workOpenRouterKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        case .upgrade, .personal, .work:
+            return true
         case .ngrok:
             return !effectiveNgrokAuthtoken.isEmpty
                 && !ngrokStaticURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        case .cursor, .modelRouting, .support:
+        case .cursor, .modelRouting:
             return true
+        case .support:
+            return personalStagedAccount != nil && workStagedAccount != nil
         }
     }
 
@@ -458,6 +457,8 @@ struct SetupWizardView: View {
             ngrokAuthtoken = ""
             ngrokStaticURL = (confirmedURL ?? suggestionURL)?.absoluteString ?? ""
             ngrokPublicURL = confirmedURL
+            isManagedUpgrade = await controller.requiresManagedSetupUpgrade()
+            currentStep = isManagedUpgrade ? .upgrade : .personal
         } catch {
             clearLoadedValues()
             credentialLoadFailed = true
@@ -479,18 +480,37 @@ struct SetupWizardView: View {
         errorMessage = nil
 
         switch currentStep {
-        case .openRouter:
-            currentStep = .ngrok
+        case .upgrade:
+            currentStep = .personal
+        case .personal, .work:
+            break
         case .ngrok:
             setupNgrok()
         case .cursor:
             currentStep = .modelRouting
         case .modelRouting:
             currentStep = .support
-            NSSound(named: NSSound.Name("Glass"))?.play()
+            let completionSound = NSSound(named: NSSound.Name("Crystal"))
+                ?? NSSound(named: NSSound.Name("Bottle"))
+            completionSound?.play()
         case .support:
-            dismiss()
-            controller.completeSetupWizard()
+            finishSetup()
+        }
+    }
+
+    private func finishSetup() {
+        guard let personalStagedAccount, let workStagedAccount, !isSaving else { return }
+        isSaving = true
+        errorMessage = nil
+        Task {
+            defer { isSaving = false }
+            do {
+                try await controller.commitManagedAccounts([personalStagedAccount, workStagedAccount])
+                hasCommittedManagedAccounts = true
+                controller.recordSuccessfulSetup()
+                controller.completeSetupWizard()
+                onFinished()
+            } catch { errorMessage = error.localizedDescription }
         }
     }
 
@@ -538,7 +558,6 @@ struct SetupWizardView: View {
                 ngrokPublicURL = setupResult.publicURL
                 ngrokStaticURL = normalizedStaticURL
                 proxyToken = setupResult.proxyToken
-                controller.recordSuccessfulSetup()
                 currentStep = .cursor
             } catch {
                 ngrokPublicURL = nil
