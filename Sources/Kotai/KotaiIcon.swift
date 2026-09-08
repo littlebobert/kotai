@@ -23,7 +23,6 @@ enum KotaiIcon {
         ) ?? NSImage(size: NSSize(width: 64, height: 64))
     }()
 
-    static let dockImage = image
 }
 
 struct KotaiIconView: View {

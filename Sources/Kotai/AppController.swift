@@ -69,8 +69,6 @@ final class AppController {
     private(set) var shouldShowSetupWizard = false
 
     init() {
-        Self.installApplicationIcon()
-
         self.configuration = ProxyConfiguration()
         var httpClientConfiguration = HTTPClient.Configuration()
         httpClientConfiguration.httpVersion = .http1Only
@@ -83,9 +81,6 @@ final class AppController {
         )
     }
 
-    private static func installApplicationIcon() {
-        NSApplication.shared.applicationIconImage = KotaiIcon.dockImage
-    }
 
     var statusDetail: String? {
         if case .failed(let message) = runtimeStatus {
