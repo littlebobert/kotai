@@ -23,7 +23,7 @@ Client model ID → ngrok → Kotai → routed OpenRouter account
 ## Download
 
 <!-- kotai-download:start -->
-[Download Kotai 0.2.2 for Apple Silicon](https://github.com/littlebobert/kotai/releases/download/0.2.2/Kotai-0.2.2-mac.zip)
+[Download Kotai 0.2.3 for Apple Silicon](https://github.com/littlebobert/kotai/releases/download/0.2.3/Kotai-0.2.3-mac.zip)
 <!-- kotai-download:end -->
 
 Kotai requires macOS 14 or newer on an Apple Silicon Mac. Unzip the archive,
