@@ -374,6 +374,65 @@ struct ManagedAccountConfigurationTests {
     }
 
     @Test
+    func decodesCurrentNestedAnalyticsResponse() throws {
+        let response = Data(#"""
+        {
+          "data": {
+            "data": [
+              {
+                "date__day": "2026-09-08T00:00:00.000Z",
+                "request_count": "6",
+                "tokens_prompt": "6331"
+              }
+            ],
+            "metadata": {
+              "query_time_ms": 17,
+              "row_count": 1,
+              "truncated": false
+            }
+          }
+        }
+        """#.utf8)
+
+        let summary = try OpenRouterManagementClient.decodeAnalyticsSummary(response)
+
+        #expect(summary.rowCount == 1)
+        #expect(!summary.truncated)
+    }
+
+    @Test
+    func decodesLegacyFlatAnalyticsResponse() throws {
+        let response = Data(#"""
+        {
+          "data": [{"model": "openai/gpt-5", "request_count": 2}],
+          "metadata": {"truncated": true}
+        }
+        """#.utf8)
+
+        let summary = try OpenRouterManagementClient.decodeAnalyticsSummary(response)
+
+        #expect(summary.rowCount == 1)
+        #expect(summary.truncated)
+    }
+
+    @Test
+    func decodingDiagnosticsIncludePathWithoutValue() {
+        struct Fixture: Decodable { let count: Int }
+        let secretValue = "private-response-value"
+        let data = Data(#"{"count":"private-response-value"}"#.utf8)
+
+        do {
+            _ = try JSONDecoder().decode(Fixture.self, from: data)
+            Issue.record("Expected response decoding to fail")
+        } catch {
+            let description = OpenRouterManagementClient.decodingErrorDescription(error)
+            #expect(description.contains("path=count"))
+            #expect(description.contains("expected Int"))
+            #expect(!description.contains(secretValue))
+        }
+    }
+
+    @Test
     func analyticsLogContextIncludesShapeWithoutIdentifiers() {
         let context = OpenRouterManagementClient.analyticsLogContext(
             dimensions: ["model"],

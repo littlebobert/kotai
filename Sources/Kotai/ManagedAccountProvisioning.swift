@@ -301,10 +301,7 @@ struct OpenRouterManagementClient: Sendable {
         }
 
         do {
-            let analyticsResponse = try JSONDecoder.snakeCase.decode(
-                AnalyticsResponse.self,
-                from: data
-            )
+            let analyticsResponse = try Self.decodeAnalyticsResponse(data)
             KotaiLogger.shared.info(
                 "Usage analytics \(requestID) completed; \(context) "
                     + "status=\(response.statusCode) responseBytes=\(data.count) "
@@ -316,10 +313,56 @@ struct OpenRouterManagementClient: Sendable {
             KotaiLogger.shared.error(
                 "Usage analytics \(requestID) decode failed; \(context) "
                     + "status=\(response.statusCode) responseBytes=\(data.count) "
-                    + "error=\(error.localizedDescription)"
+                    + "error=\(Self.decodingErrorDescription(error))"
             )
             throw AdministrationAPIError.invalidResponse
         }
+    }
+
+    static func decodeAnalyticsSummary(_ data: Data) throws -> (
+        rowCount: Int,
+        truncated: Bool
+    ) {
+        let response = try decodeAnalyticsResponse(data)
+        return (response.data.count, response.metadata?.truncated == true)
+    }
+
+    static func decodingErrorDescription(_ error: Error) -> String {
+        guard let decodingError = error as? DecodingError else {
+            return error.localizedDescription
+        }
+
+        let codingPath: [CodingKey]
+        let description: String
+        switch decodingError {
+        case .dataCorrupted(let context):
+            codingPath = context.codingPath
+            description = context.debugDescription
+        case .keyNotFound(let key, let context):
+            codingPath = context.codingPath + [key]
+            description = "missing key"
+        case .typeMismatch(let type, let context):
+            codingPath = context.codingPath
+            description = "expected \(String(describing: type))"
+        case .valueNotFound(let type, let context):
+            codingPath = context.codingPath
+            description = "missing \(String(describing: type)) value"
+        @unknown default:
+            return error.localizedDescription
+        }
+        let path = codingPath.map(\.stringValue).joined(separator: ".")
+        return "path=\(path.isEmpty ? "root" : path) reason=\(description)"
+    }
+
+    private static func decodeAnalyticsResponse(_ data: Data) throws -> AnalyticsResponse {
+        let decoder = JSONDecoder.snakeCase
+        if let envelope = try? decoder.decode(
+            AnalyticsResponseEnvelope.self,
+            from: data
+        ) {
+            return envelope.data
+        }
+        return try decoder.decode(AnalyticsResponse.self, from: data)
     }
 
     private func request<T: Decodable>(
@@ -350,7 +393,12 @@ struct OpenRouterManagementClient: Sendable {
     private struct CreatedKey: Decodable { struct Metadata: Decodable { let hash: String }; let data: Metadata; let key: String }
     private struct BYOKResponse: Decodable { struct Metadata: Decodable { let id: String }; let data: Metadata }
     private struct CreditsResponse: Decodable { struct Credits: Decodable { let totalCredits: Double; let totalUsage: Double }; let data: Credits }
-    private struct AnalyticsResponse: Decodable { let data: [DynamicRow]; let metadata: Metadata?; struct Metadata: Decodable { let truncated: Bool? } }
+    private struct AnalyticsResponseEnvelope: Decodable { let data: AnalyticsResponse }
+    private struct AnalyticsResponse: Decodable {
+        struct Metadata: Decodable { let truncated: Bool? }
+        let data: [DynamicRow]
+        let metadata: Metadata?
+    }
 }
 
 struct OpenAIAdministrationClient: Sendable {
