@@ -344,6 +344,35 @@ struct ManagedAccountConfigurationTests {
         #expect(credentials.adminKey == "admin")
     }
 
+    @Test
+    func analyticsRequestUsesCurrentOpenRouterSchema() throws {
+        let requestBody = OpenRouterManagementClient.analyticsBody(
+            start: Date(timeIntervalSince1970: 0),
+            end: Date(timeIntervalSince1970: 86_400),
+            workspaceID: "workspace-id",
+            dimensions: ["model"],
+            granularity: "day"
+        )
+        let requestData = try JSONSerialization.data(withJSONObject: requestBody)
+        let json = try #require(
+            JSONSerialization.jsonObject(with: requestData) as? [String: Any]
+        )
+        let metrics = try #require(json["metrics"] as? [String])
+        let filters = try #require(json["filters"] as? [[String: String]])
+
+        #expect(metrics.contains("tokens_prompt"))
+        #expect(metrics.contains("tokens_completion"))
+        #expect(!metrics.contains("prompt_tokens"))
+        #expect(!metrics.contains("completion_tokens"))
+        #expect(filters == [[
+            "field": "workspace",
+            "operator": "eq",
+            "value": "workspace-id",
+        ]])
+        #expect(json["dimensions"] as? [String] == ["model"])
+        #expect(json["granularity"] as? String == "day")
+    }
+
     @Test @MainActor
     func usageMenuBarPreferencesPersist() {
         let suite = "UsageMenuBarSettingsTests-\(UUID().uuidString)"

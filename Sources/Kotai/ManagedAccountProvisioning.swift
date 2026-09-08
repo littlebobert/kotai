@@ -167,27 +167,57 @@ struct OpenRouterManagementClient: Sendable {
         let start = Calendar(identifier: .gregorian).date(byAdding: .day, value: -days, to: end)!
         async let daily: AnalyticsResponse = request(
             path: "analytics/query", method: "POST", key: managementKey,
-            body: analyticsBody(start: start, end: end, workspaceID: workspaceID, dimensions: ["workspace"], granularity: "day")
+            body: Self.analyticsBody(
+                start: start,
+                end: end,
+                workspaceID: workspaceID,
+                dimensions: ["workspace"],
+                granularity: "day"
+            )
         )
         async let models: AnalyticsResponse = request(
             path: "analytics/query", method: "POST", key: managementKey,
-            body: analyticsBody(start: start, end: end, workspaceID: workspaceID, dimensions: ["model"], granularity: nil)
+            body: Self.analyticsBody(
+                start: start,
+                end: end,
+                workspaceID: workspaceID,
+                dimensions: ["model"],
+                granularity: nil
+            )
         )
         return try parseUsage(daily: await daily, models: await models)
     }
 
-    private func analyticsBody(
-        start: Date, end: Date, workspaceID: String,
-        dimensions: [String], granularity: String?
+    static func analyticsBody(
+        start: Date,
+        end: Date,
+        workspaceID: String,
+        dimensions: [String],
+        granularity: String?
     ) -> [String: Any] {
         var body: [String: Any] = [
-            "metrics": ["total_usage", "request_count", "prompt_tokens", "completion_tokens", "reasoning_tokens"],
+            "metrics": [
+                "total_usage",
+                "request_count",
+                "tokens_prompt",
+                "tokens_completion",
+                "reasoning_tokens",
+            ],
             "dimensions": dimensions,
-            "filters": [["field": "workspace", "operator": "eq", "value": workspaceID]],
-            "time_range": ["start": ISO8601DateFormatter().string(from: start), "end": ISO8601DateFormatter().string(from: end)],
+            "filters": [[
+                "field": "workspace",
+                "operator": "eq",
+                "value": workspaceID,
+            ]],
+            "time_range": [
+                "start": ISO8601DateFormatter().string(from: start),
+                "end": ISO8601DateFormatter().string(from: end),
+            ],
             "limit": 1000,
         ]
-        if let granularity { body["granularity"] = granularity }
+        if let granularity {
+            body["granularity"] = granularity
+        }
         return body
     }
 
@@ -199,7 +229,11 @@ struct OpenRouterManagementClient: Sendable {
             else { return nil }
             return UsageDataPoint(
                 date: date, spend: row.number("total_usage"), requests: row.number("request_count"),
-                promptTokens: row.number("prompt_tokens"), completionTokens: row.number("completion_tokens"),
+                promptTokens: row.number(prefixes: ["tokens_prompt", "prompt_tokens"]),
+                completionTokens: row.number(prefixes: [
+                    "tokens_completion",
+                    "completion_tokens",
+                ]),
                 reasoningTokens: row.number("reasoning_tokens")
             )
         }.sorted { $0.date < $1.date }
@@ -323,6 +357,14 @@ private struct DynamicRow: Decodable {
     let values: [String: JSONValue]
     init(from decoder: Decoder) throws { values = try decoder.singleValueContainer().decode([String: JSONValue].self) }
     func number(_ key: String) -> Double { values[key]?.number ?? 0 }
+    func number(prefixes: [String]) -> Double {
+        for key in prefixes {
+            if let number = values[key]?.number {
+                return number
+            }
+        }
+        return 0
+    }
     func string(_ key: String) -> String? { values[key]?.string }
     func stringValue(prefixes: [String]) -> String? { values.first { key, _ in prefixes.contains { key.hasPrefix($0) } }?.value.string }
 }
