@@ -61,7 +61,7 @@
 "Open ngrok Domains" = "ngrok Domainsを開く";
 "Open OpenRouter" = "OpenRouterを開く";
 "OpenRouter accounts" = "OpenRouterアカウント";
-"OpenRouter chooser for Cursor, etc." = "Cursorなどで使えるOpenRouter選択ツール。";
+"Keep work and personal coding separate in Cursor." = "Cursorで仕事用と個人用のコーディングを分けて管理できます。";
 "Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch." = "authtokenと割り当てられた固定開発URLの両方を貼り付けてください。Kotaiは起動するたびにこのURLを再利用します。";
 "Paste the authtoken from your ngrok dashboard." = "ngrokダッシュボードのauthtokenを貼り付けてください。";
 "Paste your ngrok authtoken" = "ngrok authtokenを貼り付け";

@@ -61,7 +61,7 @@
 "Open ngrok Domains" = "Open ngrok Domains";
 "Open OpenRouter" = "Open OpenRouter";
 "OpenRouter accounts" = "OpenRouter accounts";
-"OpenRouter chooser for Cursor, etc." = "OpenRouter chooser for Cursor, etc.";
+"Keep work and personal coding separate in Cursor." = "Keep work and personal coding separate in Cursor.";
 "Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch." = "Paste both your authtoken and assigned static dev URL. Kotai reuses this URL every launch.";
 "Paste the authtoken from your ngrok dashboard." = "Paste the authtoken from your ngrok dashboard.";
 "Paste your ngrok authtoken" = "Paste your ngrok authtoken";
