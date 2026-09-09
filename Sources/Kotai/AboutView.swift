@@ -16,7 +16,7 @@ struct AboutView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("OpenRouter chooser for Cursor, etc.")
+            Text("Keep work and personal coding separate in Cursor.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.vertical, -4)
