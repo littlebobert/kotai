@@ -443,6 +443,29 @@ struct ManagedAccountConfigurationTests {
         #expect(!context.contains("workspace-id"))
     }
 
+    @Test
+    func usageStatusUsesSignpostSymbolAndUSDCurrency() {
+        #expect(UsageStatusPresentation.symbolName == "signpost.right.and.left")
+        #expect(UsageStatusPresentation.currencyCode == "USD")
+    }
+
+    @Test(arguments: [
+        (12.49, "$12"),
+        (12.50, "$13"),
+        (1_234.56, "$1,235"),
+    ])
+    func usageStatusRoundsUSDToNearestDollar(
+        spend: Double,
+        expected: String
+    ) {
+        let formattedSpend = UsageStatusPresentation.formattedSpend(
+            spend,
+            locale: Locale(identifier: "en_US")
+        )
+
+        #expect(formattedSpend == expected)
+    }
+
     @Test @MainActor
     func usageMenuBarPreferencesPersist() {
         let suite = "UsageMenuBarSettingsTests-\(UUID().uuidString)"

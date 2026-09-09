@@ -105,13 +105,44 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         }
         if usageStatusItem == nil {
             let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+            if let button = item.button {
+                let image = NSImage(
+                    systemSymbolName: UsageStatusPresentation.symbolName,
+                    accessibilityDescription: String(localized: "Kotai usage")
+                )
+                image?.isTemplate = true
+                button.image = image
+                button.imagePosition = .imageLeading
+                button.title = "—"
+            }
+
             let menu = NSMenu()
-            menu.addItem(withTitle: "Usage Statistics…", action: #selector(showUsageFromStatusItem), keyEquivalent: "")
-            menu.addItem(withTitle: "Diagnostics…", action: #selector(showDiagnosticsFromStatusItem), keyEquivalent: "")
+            menu.addItem(
+                withTitle: "Usage Statistics…",
+                action: #selector(showUsageFromStatusItem),
+                keyEquivalent: ""
+            )
+            menu.addItem(
+                withTitle: "Settings…",
+                action: #selector(showSettingsFromStatusItem),
+                keyEquivalent: ","
+            )
+            menu.addItem(
+                withTitle: "Diagnostics…",
+                action: #selector(showDiagnosticsFromStatusItem),
+                keyEquivalent: ""
+            )
             menu.addItem(.separator())
-            menu.addItem(withTitle: "Quit Kotai", action: #selector(quitFromStatusItem), keyEquivalent: "q")
-            for item in menu.items { item.target = self }
-            item.menu = menu; usageStatusItem = item
+            menu.addItem(
+                withTitle: "Quit Kotai",
+                action: #selector(quitFromStatusItem),
+                keyEquivalent: "q"
+            )
+            for menuItem in menu.items {
+                menuItem.target = self
+            }
+            item.menu = menu
+            usageStatusItem = item
         }
         usageStatusTask = Task { @MainActor [weak self] in
             while !Task.isCancelled {
@@ -125,16 +156,18 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         let account = usageMenuBarSettings.account
         do {
             let result = try await controller.managedUsage(for: account.mode, days: 30)
-            let prefix = account == .personal ? "P" : "W"
-            usageStatusItem?.button?.title = "\(prefix) \(result.usage.spend.formatted(.currency(code: "USD")))"
+            usageStatusItem?.button?.title = UsageStatusPresentation.formattedSpend(
+                result.usage.spend
+            )
             usageStatusItem?.button?.toolTip = "\(account.displayName) OpenRouter workspace spend · last 30 days"
         } catch {
-            usageStatusItem?.button?.title = account == .personal ? "P —" : "W —"
+            usageStatusItem?.button?.title = "—"
             usageStatusItem?.button?.toolTip = error.localizedDescription
         }
     }
 
     @objc private func showUsageFromStatusItem() { presentUsageStatistics() }
+    @objc private func showSettingsFromStatusItem() { presentSettings() }
     @objc private func showDiagnosticsFromStatusItem() { presentDiagnostics() }
     @objc private func quitFromStatusItem() { controller.quit() }
 
@@ -158,6 +191,23 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         }
         hasPresentedInitialSetup = true
         presentSetup()
+    }
+}
+
+enum UsageStatusPresentation {
+    static let currencyCode = "USD"
+    static let symbolName = "signpost.right.and.left"
+
+    static func formattedSpend(
+        _ spend: Double,
+        locale: Locale = .current
+    ) -> String {
+        let roundedSpend = spend.rounded(.toNearestOrAwayFromZero)
+        return roundedSpend.formatted(
+            .currency(code: currencyCode)
+                .precision(.fractionLength(0))
+                .locale(locale)
+        )
     }
 }
 
