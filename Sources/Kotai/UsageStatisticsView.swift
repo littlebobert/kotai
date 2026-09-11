@@ -9,6 +9,7 @@ struct UsageStatisticsView: View {
     @State private var work: Result<AccountUsageSnapshot, Error>?
     @State private var isLoading = false
     @State private var lastUpdated: Date?
+    @State private var refreshGeneration = 0
 
     private let metricColumns = [
         GridItem(.adaptive(minimum: 130), spacing: 16, alignment: .leading),
@@ -134,20 +135,41 @@ struct UsageStatisticsView: View {
     }
 
     private func currency(_ value: Double) -> String { value.formatted(.currency(code: "USD")) }
+
     private func refresh() {
-        guard !isLoading else { return }; isLoading = true
+        let selectedDays = days
+        refreshGeneration += 1
+        let generation = refreshGeneration
+        isLoading = true
+
         Task {
-            async let personalResult = load(.personal)
-            async let workResult = load(.work)
-            personal = await personalResult; work = await workResult
-            lastUpdated = Date(); isLoading = false
+            async let personalResult = load(.personal, days: selectedDays)
+            async let workResult = load(.work, days: selectedDays)
+            let results = await (personalResult, workResult)
+
+            guard generation == refreshGeneration else { return }
+            personal = results.0
+            work = results.1
+            lastUpdated = Date()
+            isLoading = false
         }
     }
-    private func load(_ mode: AccountMode) async -> Result<AccountUsageSnapshot, Error> {
+
+    private func load(
+        _ mode: AccountMode,
+        days: Int
+    ) async -> Result<AccountUsageSnapshot, Error> {
         do {
             let result = try await controller.managedUsage(for: mode, days: days)
-            return .success(AccountUsageSnapshot(connection: result.connection, credits: result.credits, usage: result.usage, openAICost: result.openAICost))
-        } catch { return .failure(error) }
+            return .success(AccountUsageSnapshot(
+                connection: result.connection,
+                credits: result.credits,
+                usage: result.usage,
+                openAICost: result.openAICost
+            ))
+        } catch {
+            return .failure(error)
+        }
     }
 }
 
