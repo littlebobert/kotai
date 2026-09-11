@@ -26,7 +26,7 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         observeSetupRequirement()
         controller.start()
         configureUsageStatusItem()
-        presentDiagnostics()
+        presentUsageStatistics()
         Task { @MainActor [weak self] in
             guard let self, await controller.requiresManagedSetupUpgrade() else { return }
             presentSetup()
@@ -37,7 +37,7 @@ final class KotaiAppDelegate: NSObject, NSApplicationDelegate {
         _ sender: NSApplication,
         hasVisibleWindows flag: Bool
     ) -> Bool {
-        presentDiagnostics()
+        presentUsageStatistics()
         return true
     }
 
