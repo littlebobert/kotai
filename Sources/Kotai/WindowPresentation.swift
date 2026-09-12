@@ -292,7 +292,7 @@ private final class SetupWindowController: NSWindowController {
 private final class AboutWindowController: NSWindowController {
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 340, height: 250),
+            contentRect: NSRect(x: 0, y: 0, width: 292, height: 270),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false

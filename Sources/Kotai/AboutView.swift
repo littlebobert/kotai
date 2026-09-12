@@ -18,6 +18,8 @@ struct AboutView: View {
 
             Text("Keep work and personal coding separate in Cursor.")
                 .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(.secondary)
                 .padding(.vertical, -4)
 
@@ -34,7 +36,7 @@ struct AboutView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 18)
-        .frame(width: 340)
+        .frame(width: 292)
     }
 }
 
