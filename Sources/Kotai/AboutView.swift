@@ -34,7 +34,7 @@ struct AboutView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 18)
-        .frame(width: 292)
+        .frame(width: 340)
     }
 }
 
